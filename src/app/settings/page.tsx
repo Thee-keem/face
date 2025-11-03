@@ -1,15 +1,8 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Settings, 
   Store, 
@@ -19,556 +12,362 @@ import {
   Palette,
   Globe,
   CreditCard,
-  Printer,
   Save,
-  RotateCcw,
+  RotateCw,
   Download,
-  Upload
-} from 'lucide-react';
+  Upload,
+  Building,
+  FileText,
+  Printer,
+  Barcode,
+  Calendar,
+  Mail,
+  User
+} from 'lucide-react'
+import Link from 'next/link'
 
 export default function SettingsPage() {
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Store settings
-  const [storeSettings, setStoreSettings] = useState({
-    name: 'Inventory Pro Store',
-    address: '123 Main St, City, State 12345',
-    phone: '+1 (555) 123-4567',
-    email: 'store@inventorypro.com',
-    website: 'https://inventorypro.com',
-    currency: 'USD',
-    timezone: 'America/New_York',
-  });
-
-  // Notification settings
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    lowStockAlerts: true,
-    outOfStockAlerts: true,
-    overstockAlerts: false,
-    newSaleAlerts: true,
-    dailyReports: false,
-    weeklyReports: true,
-  });
-
-  // Security settings
-  const [securitySettings, setSecuritySettings] = useState({
-    twoFactorAuth: false,
-    sessionTimeout: 30,
-    passwordExpiry: 90,
-    maxLoginAttempts: 5,
-    requireStrongPasswords: true,
-  });
-
-  // POS settings
-  const [posSettings, setPosSettings] = useState({
-    defaultTaxRate: 8.5,
-    receiptHeader: 'Thank you for shopping with us!',
-    receiptFooter: 'Please come again soon!',
-    autoPrintReceipt: true,
-    allowReturns: true,
-    requireCustomerInfo: false,
-  });
-
-  // System settings
-  const [systemSettings, setSystemSettings] = useState({
-    autoBackup: true,
-    backupFrequency: 'daily',
-    retentionPeriod: 30,
-    maintenanceMode: false,
-    debugMode: false,
-  });
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    alert('Settings saved successfully!');
-  };
-
-  const handleReset = () => {
-    if (confirm('Are you sure you want to reset all settings to default?')) {
-      // Reset all settings to default values
-      alert('Settings reset to default!');
-    }
-  };
-
-  const handleExportSettings = () => {
-    const settings = {
-      store: storeSettings,
-      notifications: notificationSettings,
-      security: securitySettings,
-      pos: posSettings,
-      system: systemSettings,
-    };
-    
-    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'settings-backup.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Settings className="h-6 w-6" />
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-              <p className="text-muted-foreground">
-                Configure your system settings and preferences.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportSettings}>
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button variant="outline" onClick={handleReset}>
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </div>
-
-        <Tabs defaultValue="store" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="store" className="flex items-center gap-2">
-              <Store className="h-4 w-4" />
-              Store
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger value="pos" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              POS
-            </TabsTrigger>
-            <TabsTrigger value="system" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              System
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Store Settings */}
-          <TabsContent value="store">
-            <Card>
-              <CardHeader>
-                <CardTitle>Store Information</CardTitle>
-                <CardDescription>
-                  Manage your store's basic information and contact details.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="storeName">Store Name</Label>
-                    <Input
-                      id="storeName"
-                      value={storeSettings.name}
-                      onChange={(e) => setStoreSettings({ ...storeSettings, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="storeEmail">Email</Label>
-                    <Input
-                      id="storeEmail"
-                      type="email"
-                      value={storeSettings.email}
-                      onChange={(e) => setStoreSettings({ ...storeSettings, email: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="storeAddress">Address</Label>
-                  <Input
-                    id="storeAddress"
-                    value={storeSettings.address}
-                    onChange={(e) => setStoreSettings({ ...storeSettings, address: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="storePhone">Phone</Label>
-                    <Input
-                      id="storePhone"
-                      value={storeSettings.phone}
-                      onChange={(e) => setStoreSettings({ ...storeSettings, phone: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="storeWebsite">Website</Label>
-                    <Input
-                      id="storeWebsite"
-                      value={storeSettings.website}
-                      onChange={(e) => setStoreSettings({ ...storeSettings, website: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Currency</Label>
-                    <Select value={storeSettings.currency} onValueChange={(value) => setStoreSettings({ ...storeSettings, currency: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD ($)</SelectItem>
-                        <SelectItem value="EUR">EUR (€)</SelectItem>
-                        <SelectItem value="GBP">GBP (£)</SelectItem>
-                        <SelectItem value="CAD">CAD ($)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Timezone</Label>
-                    <Select value={storeSettings.timezone} onValueChange={(value) => setStoreSettings({ ...storeSettings, timezone: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                        <SelectItem value="America/Chicago">Central Time</SelectItem>
-                        <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                        <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Notification Settings */}
-          <TabsContent value="notifications">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>
-                  Configure how and when you receive notifications.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Receive notifications via email</p>
-                    </div>
-                    <Switch
-                      checked={notificationSettings.emailNotifications}
-                      onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, emailNotifications: checked })}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Inventory Alerts</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Low Stock Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Notify when stock is running low</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.lowStockAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, lowStockAlerts: checked })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Out of Stock Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Notify when items are out of stock</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.outOfStockAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, outOfStockAlerts: checked })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Overstock Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Notify when stock exceeds maximum</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.overstockAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, overstockAlerts: checked })}
-                      />
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Sales & Reports</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>New Sale Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Notify for new sales</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.newSaleAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, newSaleAlerts: checked })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Daily Reports</Label>
-                        <p className="text-sm text-muted-foreground">Receive daily summary reports</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.dailyReports}
-                        onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, dailyReports: checked })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Weekly Reports</Label>
-                        <p className="text-sm text-muted-foreground">Receive weekly summary reports</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.weeklyReports}
-                        onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, weeklyReports: checked })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Security Settings */}
-          <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>
-                  Manage security preferences and access controls.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Two-Factor Authentication</Label>
-                      <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-                    </div>
-                    <Switch
-                      checked={securitySettings.twoFactorAuth}
-                      onCheckedChange={(checked) => setSecuritySettings({ ...securitySettings, twoFactorAuth: checked })}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Session Timeout (minutes)</Label>
-                      <Input
-                        type="number"
-                        value={securitySettings.sessionTimeout}
-                        onChange={(e) => setSecuritySettings({ ...securitySettings, sessionTimeout: parseInt(e.target.value) })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Password Expiry (days)</Label>
-                      <Input
-                        type="number"
-                        value={securitySettings.passwordExpiry}
-                        onChange={(e) => setSecuritySettings({ ...securitySettings, passwordExpiry: parseInt(e.target.value) })}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Max Login Attempts</Label>
-                      <Input
-                        type="number"
-                        value={securitySettings.maxLoginAttempts}
-                        onChange={(e) => setSecuritySettings({ ...securitySettings, maxLoginAttempts: parseInt(e.target.value) })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between pt-6">
-                      <div className="space-y-0.5">
-                        <Label>Require Strong Passwords</Label>
-                        <p className="text-sm text-muted-foreground">Enforce password complexity</p>
-                      </div>
-                      <Switch
-                        checked={securitySettings.requireStrongPasswords}
-                        onCheckedChange={(checked) => setSecuritySettings({ ...securitySettings, requireStrongPasswords: checked })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* POS Settings */}
-          <TabsContent value="pos">
-            <Card>
-              <CardHeader>
-                <CardTitle>Point of Sale Settings</CardTitle>
-                <CardDescription>
-                  Configure POS behavior and receipt settings.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Default Tax Rate (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={posSettings.defaultTaxRate}
-                      onChange={(e) => setPosSettings({ ...posSettings, defaultTaxRate: parseFloat(e.target.value) })}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Receipt Settings</h4>
-                    <div className="space-y-2">
-                      <Label>Receipt Header</Label>
-                      <Input
-                        value={posSettings.receiptHeader}
-                        onChange={(e) => setPosSettings({ ...posSettings, receiptHeader: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Receipt Footer</Label>
-                      <Input
-                        value={posSettings.receiptFooter}
-                        onChange={(e) => setPosSettings({ ...posSettings, receiptFooter: e.target.value })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Auto Print Receipt</Label>
-                        <p className="text-sm text-muted-foreground">Automatically print receipts</p>
-                      </div>
-                      <Switch
-                        checked={posSettings.autoPrintReceipt}
-                        onCheckedChange={(checked) => setPosSettings({ ...posSettings, autoPrintReceipt: checked })}
-                      />
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Transaction Settings</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Allow Returns</Label>
-                        <p className="text-sm text-muted-foreground">Enable return transactions</p>
-                      </div>
-                      <Switch
-                        checked={posSettings.allowReturns}
-                        onCheckedChange={(checked) => setPosSettings({ ...posSettings, allowReturns: checked })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Require Customer Info</Label>
-                        <p className="text-sm text-muted-foreground">Require customer details for sales</p>
-                      </div>
-                      <Switch
-                        checked={posSettings.requireCustomerInfo}
-                        onCheckedChange={(checked) => setPosSettings({ ...posSettings, requireCustomerInfo: checked })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* System Settings */}
-          <TabsContent value="system">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-                <CardDescription>
-                  Configure system-wide settings and maintenance options.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Auto Backup</Label>
-                      <p className="text-sm text-muted-foreground">Automatically backup system data</p>
-                    </div>
-                    <Switch
-                      checked={systemSettings.autoBackup}
-                      onCheckedChange={(checked) => setSystemSettings({ ...systemSettings, autoBackup: checked })}
-                    />
-                  </div>
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Backup Frequency</Label>
-                      <Select value={systemSettings.backupFrequency} onValueChange={(value) => setSystemSettings({ ...systemSettings, backupFrequency: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hourly">Hourly</SelectItem>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Retention Period (days)</Label>
-                      <Input
-                        type="number"
-                        value={systemSettings.retentionPeriod}
-                        onChange={(e) => setSystemSettings({ ...systemSettings, retentionPeriod: parseInt(e.target.value) })}
-                      />
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">Maintenance Mode</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Maintenance Mode</Label>
-                        <p className="text-sm text-muted-foreground">Put system in maintenance mode</p>
-                      </div>
-                      <Switch
-                        checked={systemSettings.maintenanceMode}
-                        onCheckedChange={(checked) => setSystemSettings({ ...systemSettings, maintenanceMode: checked })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Debug Mode</Label>
-                        <p className="text-sm text-muted-foreground">Enable debug logging</p>
-                      </div>
-                      <Switch
-                        checked={systemSettings.debugMode}
-                        onCheckedChange={(checked) => setSystemSettings({ ...systemSettings, debugMode: checked })}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground">
+          Configure your system settings and preferences
+        </p>
       </div>
-    </DashboardLayout>
-  );
+      
+      <Tabs defaultValue="general" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+          <TabsTrigger value="general" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">General</span>
+          </TabsTrigger>
+          <TabsTrigger value="business" className="flex items-center gap-2">
+            <Store className="h-4 w-4" />
+            <span className="hidden sm:inline">Business</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Notifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Security</span>
+          </TabsTrigger>
+          <TabsTrigger value="pos" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            <span className="hidden sm:inline">POS</span>
+          </TabsTrigger>
+          <TabsTrigger value="system" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            <span className="hidden sm:inline">System</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="general" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Business Locations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage your business locations and warehouses
+                </p>
+                <Button asChild className="w-full">
+                  <Link href="/settings/locations">
+                    <Building className="h-4 w-4 mr-2" />
+                    Manage Locations
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Invoice Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure invoice templates and numbering
+                </p>
+                <Button asChild className="w-full" variant="outline">
+                  <Link href="/settings/invoice">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Configure
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Currency Rates
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage currency exchange rates
+                </p>
+                <Button asChild className="w-full" variant="outline">
+                  <Link href="/settings/currency-rates">
+                    <Globe className="h-4 w-4 mr-2" />
+                    Manage Rates
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="business" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Configuration</CardTitle>
+              <CardDescription>
+                Manage your business information and operational settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Store className="h-4 w-4 text-blue-500" />
+                    <h3 className="font-medium">Store Information</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Business name, address, and contact details
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href="/settings/business">
+                      <Store className="h-4 w-4 mr-2" />
+                      Edit Store Info
+                    </Link>
+                  </Button>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-4 w-4 text-green-500" />
+                    <h3 className="font-medium">Business Hours</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Operating hours and holiday schedules
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href="/settings/business">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Set Hours
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="notifications" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification Settings</CardTitle>
+              <CardDescription>
+                Configure email and system notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Mail className="h-4 w-4 text-purple-500" />
+                  <h3 className="font-medium">Email Templates</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Customize email templates for reports and notifications
+                </p>
+                <Button asChild>
+                  <Link href="/settings/email-templates">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Manage Templates
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Security Configuration</CardTitle>
+              <CardDescription>
+                Manage authentication and access control
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="h-4 w-4 text-red-500" />
+                    <h3 className="font-medium">Authentication</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Two-factor authentication and session settings
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href="/settings/security">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Configure
+                    </Link>
+                  </Button>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="h-4 w-4 text-orange-500" />
+                    <h3 className="font-medium">User Roles</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Manage user permissions and access levels
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link href="/users">
+                      <User className="h-4 w-4 mr-2" />
+                      Manage Roles
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="pos" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Printer className="h-5 w-5" />
+                  Receipt Printers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure receipt printers and printing settings
+                </p>
+                <Button asChild className="w-full">
+                  <Link href="/settings/printers">
+                    <Printer className="h-4 w-4 mr-2" />
+                    Manage Printers
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Barcode className="h-5 w-5" />
+                  Barcode Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure barcode generation and scanning
+                </p>
+                <Button asChild className="w-full" variant="outline">
+                  <Link href="/settings/barcode">
+                    <Barcode className="h-4 w-4 mr-2" />
+                    Configure
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Tables & Services
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage tables, services, and seating arrangements
+                </p>
+                <Button asChild className="w-full" variant="outline">
+                  <Link href="/settings/tables">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Manage Tables
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="system" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Management</CardTitle>
+              <CardDescription>
+                Backup, maintenance, and system configuration
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Database className="h-4 w-4 text-green-500" />
+                    <h3 className="font-medium">Backup & Restore</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Export and import system data
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import
+                    </Button>
+                  </div>
+                </div>
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <RotateCw className="h-4 w-4 text-blue-500" />
+                    <h3 className="font-medium">System Maintenance</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Clear cache, optimize database, and system checks
+                  </p>
+                  <Button variant="outline" size="sm">
+                    <RotateCw className="h-4 w-4 mr-2" />
+                    Run Maintenance
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="flex justify-end gap-2">
+        <Button variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Export Settings
+        </Button>
+        <Button variant="outline">
+          <RotateCw className="h-4 w-4 mr-2" />
+          Reset to Defaults
+        </Button>
+        <Button>
+          <Save className="h-4 w-4 mr-2" />
+          Save Changes
+        </Button>
+      </div>
+    </div>
+  )
 }

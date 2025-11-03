@@ -29,6 +29,7 @@ interface InventoryState {
     lowStock: boolean;
     outOfStock: boolean;
     active: boolean;
+    priceRange?: '0-50' | '50-100' | '100+';
   };
   isLoading: boolean;
 }
@@ -41,6 +42,7 @@ const initialState: InventoryState = {
     lowStock: false,
     outOfStock: false,
     active: true,
+    priceRange: undefined,
   },
   isLoading: false,
 };

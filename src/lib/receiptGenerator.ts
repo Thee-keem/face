@@ -1,11 +1,13 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Currency } from '@prisma/client';
 
 export interface ReceiptItem {
   name: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  currency?: Currency;
 }
 
 export interface ReceiptData {
@@ -31,6 +33,7 @@ export interface ReceiptData {
   discount: number;
   tax: number;
   total: number;
+  currency?: Currency;
 }
 
 export class ReceiptGenerator {
@@ -38,6 +41,22 @@ export class ReceiptGenerator {
 
   constructor() {
     this.doc = new jsPDF();
+  }
+
+  private formatCurrencyAmount(amount: number, currency: Currency = Currency.USD): string {
+    const currencySymbols: Record<string, string> = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'CAD': 'C$',
+      'KSH': 'KSh',
+      'ZAR': 'R'
+    };
+    
+    const symbol = currencySymbols[currency] || currency;
+    const decimalPlaces = currency === Currency.KSH ? 0 : 2;
+    
+    return `${symbol}${amount.toFixed(decimalPlaces)}`;
   }
 
   private addHeader(storeInfo: ReceiptData['storeInfo']) {
@@ -93,7 +112,7 @@ export class ReceiptGenerator {
     }
   }
 
-  private addItems(items: ReceiptItem[]) {
+  private addItems(items: ReceiptItem[], currency: Currency = Currency.USD) {
     // Table headers
     this.doc.setFontSize(10);
     this.doc.setFont('helvetica', 'bold');
@@ -121,8 +140,8 @@ export class ReceiptGenerator {
       const itemName = item.name.length > 25 ? item.name.substring(0, 25) + '...' : item.name;
       this.doc.text(itemName, 20, yPos);
       this.doc.text(item.quantity.toString(), 100, yPos);
-      this.doc.text(`$${item.unitPrice.toFixed(2)}`, 130, yPos);
-      this.doc.text(`$${item.totalPrice.toFixed(2)}`, 160, yPos);
+      this.doc.text(this.formatCurrencyAmount(item.unitPrice, item.currency || currency), 130, yPos);
+      this.doc.text(this.formatCurrencyAmount(item.totalPrice, item.currency || currency), 160, yPos);
       yPos += 8;
     });
 
@@ -133,21 +152,21 @@ export class ReceiptGenerator {
     return yPos;
   }
 
-  private addTotals(subtotal: number, discount: number, tax: number, total: number, yPos: number) {
+  private addTotals(subtotal: number, discount: number, tax: number, total: number, currency: Currency = Currency.USD, yPos: number) {
     this.doc.setFont('helvetica', 'normal');
     this.doc.text('Subtotal:', 130, yPos);
-    this.doc.text(`$${subtotal.toFixed(2)}`, 160, yPos);
+    this.doc.text(this.formatCurrencyAmount(subtotal, currency), 160, yPos);
     yPos += 8;
 
     if (discount > 0) {
       this.doc.text('Discount:', 130, yPos);
-      this.doc.text(`-$${discount.toFixed(2)}`, 160, yPos);
+      this.doc.text(`-${this.formatCurrencyAmount(discount, currency)}`, 160, yPos);
       yPos += 8;
     }
 
     if (tax > 0) {
       this.doc.text('Tax:', 130, yPos);
-      this.doc.text(`$${tax.toFixed(2)}`, 160, yPos);
+      this.doc.text(this.formatCurrencyAmount(tax, currency), 160, yPos);
       yPos += 8;
     }
 
@@ -159,7 +178,7 @@ export class ReceiptGenerator {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(12);
     this.doc.text('TOTAL:', 130, yPos);
-    this.doc.text(`$${total.toFixed(2)}`, 160, yPos);
+    this.doc.text(this.formatCurrencyAmount(total, currency), 160, yPos);
   }
 
   private addFooter() {
@@ -178,7 +197,9 @@ export class ReceiptGenerator {
     }
   }
 
-  generateReceipt(data: ReceiptData): Uint8Array {
+  generateReceipt(data: ReceiptData): ArrayBuffer {
+    const currency = data.currency || Currency.USD;
+    
     // Add header
     this.addHeader(data.storeInfo);
 
@@ -187,15 +208,15 @@ export class ReceiptGenerator {
     this.addCustomerInfo(data.customerInfo);
 
     // Add items
-    const itemsEndY = this.addItems(data.items);
+    const itemsEndY = this.addItems(data.items, currency);
 
     // Add totals
-    this.addTotals(data.subtotal, data.discount, data.tax, data.total, itemsEndY);
+    this.addTotals(data.subtotal, data.discount, data.tax, data.total, currency, itemsEndY);
 
     // Add footer
     this.addFooter();
 
-    return this.doc.output('arraybuffer') as Uint8Array;
+    return this.doc.output('arraybuffer');
   }
 
   downloadReceipt(data: ReceiptData, filename?: string): void {
@@ -213,7 +234,7 @@ export class ReceiptGenerator {
     URL.revokeObjectURL(url);
   }
 
-  async generateReceiptFromHTML(elementId: string): Promise<Uint8Array> {
+  async generateReceiptFromHTML(elementId: string): Promise<ArrayBuffer> {
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error('Element not found');
@@ -243,17 +264,9 @@ export class ReceiptGenerator {
       heightLeft -= pageHeight;
     }
 
-    return this.doc.output('arraybuffer') as Uint8Array;
+    return this.doc.output('arraybuffer');
   }
 }
-
-// Utility function to format currency
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
-};
 
 // Utility function to format date
 export const formatDate = (date: Date | string): string => {

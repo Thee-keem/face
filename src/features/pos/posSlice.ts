@@ -1,9 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Currency } from '@prisma/client';
 
 interface POSItem {
   productId: string;
   name: string;
   price: number;
+  currency: Currency;
   quantity: number;
   totalPrice: number;
 }
@@ -14,6 +16,7 @@ interface POSState {
   tax: number;
   paymentMethod: 'CASH' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'MOBILE_PAYMENT' | 'BANK_TRANSFER';
   customerInfo: {
+    id?: string;
     name?: string;
     email?: string;
     phone?: string;
@@ -24,6 +27,7 @@ interface POSState {
     invoiceNo?: string;
     status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
   } | null;
+  currency: Currency;
 }
 
 const initialState: POSState = {
@@ -34,20 +38,27 @@ const initialState: POSState = {
   customerInfo: {},
   isScanning: false,
   currentSale: null,
+  currency: Currency.USD, // Default currency
 };
 
 const posSlice = createSlice({
   name: 'pos',
   initialState,
   reducers: {
-    addItem: (state, action: PayloadAction<Omit<POSItem, 'totalPrice'>>) => {
-      const existingItem = state.items.find(item => item.productId === action.payload.productId);
+    addItem: (state, action: PayloadAction<Omit<POSItem, 'totalPrice' | 'currency'> & { currency?: Currency }>) => {
+      const currency = action.payload.currency || state.currency;
+      const existingItem = state.items.find(item => 
+        item.productId === action.payload.productId && 
+        item.currency === currency
+      );
+      
       if (existingItem) {
         existingItem.quantity += action.payload.quantity;
         existingItem.totalPrice = existingItem.price * existingItem.quantity;
       } else {
         state.items.push({
           ...action.payload,
+          currency,
           totalPrice: action.payload.price * action.payload.quantity,
         });
       }
@@ -80,6 +91,9 @@ const posSlice = createSlice({
     setCurrentSale: (state, action: PayloadAction<POSState['currentSale']>) => {
       state.currentSale = action.payload;
     },
+    setCurrency: (state, action: PayloadAction<Currency>) => {
+      state.currency = action.payload;
+    },
     clearCart: (state) => {
       state.items = [];
       state.discount = 0;
@@ -100,6 +114,7 @@ export const {
   setCustomerInfo,
   setScanning,
   setCurrentSale,
+  setCurrency,
   clearCart,
 } = posSlice.actions;
 
@@ -115,3 +130,5 @@ export const selectTotal = (state: { pos: POSState }) => {
   const tax = state.pos.tax;
   return subtotal - discount + tax;
 };
+
+export const selectCurrency = (state: { pos: POSState }) => state.pos.currency;

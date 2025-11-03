@@ -33,7 +33,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { 
   Search, 
   Plus, 
@@ -155,7 +154,7 @@ export default function ExpensesPage() {
       receiptUrl: '/receipts/maintenance-jan-2024.pdf',
       createdAt: '2024-01-18T13:20:00Z',
     },
-  ];
+  ]);
 
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = expense.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -181,7 +180,7 @@ export default function ExpensesPage() {
       case 'SUPPLIES':
         return 'outline' as const;
       case 'MAINTENANCE':
-        return 'warning' as const;
+        return 'secondary' as const;
       case 'MARKETING':
         return 'default' as const;
       default:
@@ -280,7 +279,7 @@ export default function ExpensesPage() {
       createdAt: new Date().toISOString(),
     };
 
-    setMockExpenses(prev => [...prev, newExpense]);
+    setExpenses(prev => [...prev, newExpense]);
     toast.success('Expense added successfully');
     resetForm();
     setIsAddDialogOpen(false);
@@ -315,7 +314,7 @@ export default function ExpensesPage() {
       receiptUrl: formData.receiptUrl,
     };
 
-    setMockExpenses(prev => prev.map(exp => exp.id === selectedExpense.id ? updatedExpense : exp));
+    setExpenses(prev => prev.map(exp => exp.id === selectedExpense.id ? updatedExpense : exp));
     toast.success('Expense updated successfully');
     resetForm();
     setIsEditDialogOpen(false);
@@ -324,7 +323,7 @@ export default function ExpensesPage() {
 
   const handleDeleteExpense = (expense: Expense) => {
     if (confirm(`Are you sure you want to delete "${expense.title}"?`)) {
-      setMockExpenses(prev => prev.filter(exp => exp.id !== expense.id));
+      setExpenses(prev => prev.filter(exp => exp.id !== expense.id));
       toast.success('Expense deleted successfully');
     }
   };
@@ -376,383 +375,381 @@ export default function ExpensesPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Receipt className="h-6 w-6" />
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
-              <p className="text-muted-foreground">
-                Track and manage your business expenses.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Expense
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Expense</DialogTitle>
-                  <DialogDescription>
-                    Record a new business expense.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="title" className="text-right">
-                      Title *
-                    </Label>
-                    <Input 
-                      id="title" 
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      className="col-span-3" 
-                      placeholder="Expense title"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="description" className="text-right">
-                      Description
-                    </Label>
-                    <Input 
-                      id="description" 
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      className="col-span-3" 
-                      placeholder="Optional description"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="amount" className="text-right">
-                      Amount *
-                    </Label>
-                    <Input 
-                      id="amount" 
-                      name="amount"
-                      type="number" 
-                      step="0.01"
-                      value={formData.amount}
-                      onChange={handleInputChange}
-                      className="col-span-3" 
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">
-                      Category
-                    </Label>
-                    <Select onValueChange={(value) => handleSelectChange('category', value)}>
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="RENT">Rent</SelectItem>
-                        <SelectItem value="UTILITIES">Utilities</SelectItem>
-                        <SelectItem value="SALARIES">Salaries</SelectItem>
-                        <SelectItem value="SUPPLIES">Supplies</SelectItem>
-                        <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                        <SelectItem value="MARKETING">Marketing</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="date" className="text-right">
-                      Date *
-                    </Label>
-                    <Input 
-                      id="date" 
-                      name="date"
-                      type="date"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                      className="col-span-3" 
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="receipt" className="text-right">
-                      Receipt
-                    </Label>
-                    <div className="col-span-3">
-                      <input 
-                        type="file" 
-                        id="receipt" 
-                        onChange={handleUploadReceipt}
-                        className="hidden" 
-                        accept="image/*,.pdf"
-                      />
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => document.getElementById('receipt')?.click()}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {formData.receiptUrl ? 'Change Receipt' : 'Upload Receipt'}
-                      </Button>
-                      {formData.receiptUrl && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Receipt uploaded: {formData.receiptUrl.split('/').pop()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" onClick={handleAddExpense}>
-                    Add Expense
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Receipt className="h-6 w-6" />
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
+            <p className="text-muted-foreground">
+              Track and manage your business expenses.
+            </p>
           </div>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.totalThisMonth)}</div>
-              <p className="text-xs text-muted-foreground">
-                Total expenses
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Filtered Total</CardTitle>
-              <Filter className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.totalFiltered)}</div>
-              <p className="text-xs text-muted-foreground">
-                Current filter
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.averageExpense)}</div>
-              <p className="text-xs text-muted-foreground">
-                Per expense
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Count</CardTitle>
-              <Receipt className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.expenseCount}</div>
-              <p className="text-xs text-muted-foreground">
-                Expenses
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Category Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Category Breakdown</CardTitle>
-            <CardDescription>
-              Expense distribution by category
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
-              {Object.entries(categoryTotals).map(([category, total]) => (
-                <Card key={category}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        {getCategoryIcon(category)}
-                        <span className="text-sm font-medium">{category}</span>
-                      </div>
-                      <Badge variant={getCategoryBadgeVariant(category)}>
-                        {expenses.filter(e => e.category === category).length}
-                      </Badge>
-                    </div>
-                    <div className="text-lg font-semibold">{formatCurrency(total)}</div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Search and Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Search & Filter</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search expenses by title or description..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Expense
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add New Expense</DialogTitle>
+                <DialogDescription>
+                  Record a new business expense.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className="text-right">
+                    Title *
+                  </Label>
+                  <Input 
+                    id="title" 
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    className="col-span-3" 
+                    placeholder="Expense title"
                   />
                 </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Input 
+                    id="description" 
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="col-span-3" 
+                    placeholder="Optional description"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="amount" className="text-right">
+                    Amount *
+                  </Label>
+                  <Input 
+                    id="amount" 
+                    name="amount"
+                    type="number" 
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={handleInputChange}
+                    className="col-span-3" 
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="category" className="text-right">
+                    Category
+                  </Label>
+                  <Select onValueChange={(value) => handleSelectChange('category', value)}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RENT">Rent</SelectItem>
+                      <SelectItem value="UTILITIES">Utilities</SelectItem>
+                      <SelectItem value="SALARIES">Salaries</SelectItem>
+                      <SelectItem value="SUPPLIES">Supplies</SelectItem>
+                      <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+                      <SelectItem value="MARKETING">Marketing</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="date" className="text-right">
+                    Date *
+                  </Label>
+                  <Input 
+                    id="date" 
+                    name="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    className="col-span-3" 
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="receipt" className="text-right">
+                    Receipt
+                  </Label>
+                  <div className="col-span-3">
+                    <input 
+                      type="file" 
+                      id="receipt" 
+                      onChange={handleUploadReceipt}
+                      className="hidden" 
+                      accept="image/*,.pdf"
+                    />
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => document.getElementById('receipt')?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {formData.receiptUrl ? 'Change Receipt' : 'Upload Receipt'}
+                    </Button>
+                    {formData.receiptUrl && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Receipt uploaded: {formData.receiptUrl.split('/').pop()}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="RENT">Rent</SelectItem>
-                    <SelectItem value="UTILITIES">Utilities</SelectItem>
-                    <SelectItem value="SALARIES">Salaries</SelectItem>
-                    <SelectItem value="SUPPLIES">Supplies</SelectItem>
-                    <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                    <SelectItem value="MARKETING">Marketing</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={dateFilter} onValueChange={setDateFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Date Range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="this-month">This Month</SelectItem>
-                    <SelectItem value="last-month">Last Month</SelectItem>
-                    <SelectItem value="this-year">This Year</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" onClick={handleAddExpense}>
+                  Add Expense
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
-        {/* Expenses Table */}
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Expenses ({filteredExpenses.length})</CardTitle>
-            <CardDescription>
-              A list of all business expenses.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Month</CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Expense</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Added By</TableHead>
-                  <TableHead>Receipt</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredExpenses.map((expense) => (
-                  <TableRow key={expense.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{expense.title}</div>
-                        {expense.description && (
-                          <div className="text-sm text-muted-foreground">{expense.description}</div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getCategoryIcon(expense.category)}
-                        <Badge variant={getCategoryBadgeVariant(expense.category)}>
-                          {expense.category}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>{formatDate(expense.date)}</TableCell>
-                    <TableCell className="font-semibold">{formatCurrency(expense.amount)}</TableCell>
-                    <TableCell>{expense.userName}</TableCell>
-                    <TableCell>
-                      {expense.receiptUrl ? (
-                        <Button variant="ghost" size="sm" onClick={() => handleViewReceipt(expense)}>
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">None</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedExpense(expense);
-                            setIsViewDialogOpen(true);
-                          }}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditExpense(expense)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Expense
-                          </DropdownMenuItem>
-                          {expense.receiptUrl && (
-                            <DropdownMenuItem onClick={() => handleViewReceipt(expense)}>
-                              <FileText className="mr-2 h-4 w-4" />
-                              View Receipt
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleEditExpense(expense)}>
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload Receipt
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteExpense(expense)} className="text-red-600">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Expense
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalThisMonth)}</div>
+            <p className="text-xs text-muted-foreground">
+              Total expenses
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Filtered Total</CardTitle>
+            <Filter className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalFiltered)}</div>
+            <p className="text-xs text-muted-foreground">
+              Current filter
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(stats.averageExpense)}</div>
+            <p className="text-xs text-muted-foreground">
+              Per expense
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Count</CardTitle>
+            <Receipt className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.expenseCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Expenses
+            </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Category Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Category Breakdown</CardTitle>
+          <CardDescription>
+            Expense distribution by category
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
+            {Object.entries(categoryTotals).map(([category, total]) => (
+              <Card key={category}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {getCategoryIcon(category)}
+                      <span className="text-sm font-medium">{category}</span>
+                    </div>
+                    <Badge variant={getCategoryBadgeVariant(category)}>
+                      {expenses.filter(e => e.category === category).length}
+                    </Badge>
+                  </div>
+                  <div className="text-lg font-semibold">{formatCurrency(total)}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Search and Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search & Filter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search expenses by title or description..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="RENT">Rent</SelectItem>
+                  <SelectItem value="UTILITIES">Utilities</SelectItem>
+                  <SelectItem value="SALARIES">Salaries</SelectItem>
+                  <SelectItem value="SUPPLIES">Supplies</SelectItem>
+                  <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+                  <SelectItem value="MARKETING">Marketing</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="this-month">This Month</SelectItem>
+                  <SelectItem value="last-month">Last Month</SelectItem>
+                  <SelectItem value="this-year">This Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Expenses Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Expenses ({filteredExpenses.length})</CardTitle>
+          <CardDescription>
+            A list of all business expenses.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Expense</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Added By</TableHead>
+                <TableHead>Receipt</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredExpenses.map((expense) => (
+                <TableRow key={expense.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{expense.title}</div>
+                      {expense.description && (
+                        <div className="text-sm text-muted-foreground">{expense.description}</div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getCategoryIcon(expense.category)}
+                      <Badge variant={getCategoryBadgeVariant(expense.category)}>
+                        {expense.category}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDate(expense.date)}</TableCell>
+                  <TableCell className="font-semibold">{formatCurrency(expense.amount)}</TableCell>
+                  <TableCell>{expense.userName}</TableCell>
+                  <TableCell>
+                    {expense.receiptUrl ? (
+                      <Button variant="ghost" size="sm" onClick={() => handleViewReceipt(expense)}>
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">None</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedExpense(expense);
+                          setIsViewDialogOpen(true);
+                        }}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditExpense(expense)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit Expense
+                        </DropdownMenuItem>
+                        {expense.receiptUrl && (
+                          <DropdownMenuItem onClick={() => handleViewReceipt(expense)}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            View Receipt
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleEditExpense(expense)}>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload Receipt
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteExpense(expense)} className="text-red-600">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Expense
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Edit Expense Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -940,6 +937,6 @@ export default function ExpensesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </div>
   );
 }
