@@ -742,46 +742,12 @@ async function generateSalesRepresentativeReport(dateFilter: any, locationId: st
 }
 
 async function generateTableReport(dateFilter: any, locationId: string | null) {
-  const tables = await db.table.findMany({
-    where: {
-      isActive: true,
-      ...(locationId && { locationId }),
-    },
-    include: {
-      location: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
-  
-  // Get sales for each table
-  const tableSales = await Promise.all(
-    tables.map(async table => {
-      const sales = await db.sale.findMany({
-        where: {
-          tableId: table.id,
-          createdAt: dateFilter,
-          status: 'COMPLETED',
-        },
-      });
-      
-      const totalRevenue = sales.reduce((sum, sale) => sum + sale.finalAmount, 0);
-      
-      return {
-        ...table,
-        salesCount: sales.length,
-        totalRevenue,
-      };
-    })
-  );
-  
-  return tableSales;
+  // Since we've removed table functionality for retail focus, return empty array
+  return [];
 }
 
 async function generateServiceStaffReport(dateFilter: any, locationId: string | null) {
-  // This would show performance data for service staff
+  // This would show performance data for staff
   // For now, we'll return a simplified version
   const users = await db.user.findMany({
     where: {
