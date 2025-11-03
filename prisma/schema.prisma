@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -18,12 +18,18 @@ model User {
   email     String   @unique
   name      String?
   role      UserRole @default(STAFF)
+  password  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   // Relations
   sales     Sale[]
   expenses  Expense[]
+  productHistory ProductHistory[]
+  stockAdjustments StockAdjustment[] @relation("adjustedBy")
+  purchaseOrders PurchaseOrder[]
+  payments  Payment[]
+  salesRepresentative SalesRepresentative?
   
   @@map("users")
 }
@@ -54,16 +60,72 @@ model Product {
   maxStock    Int      @default(100)
   isActive    Boolean  @default(true)
   categoryId  String?
+  unitId      String?
+  brandId     String?
+  sellingPriceGroupId String?
   imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   // Relations
   category    Category? @relation(fields: [categoryId], references: [id])
+  unit        Unit? @relation(fields: [unitId], references: [id])
+  brand       Brand? @relation(fields: [brandId], references: [id])
+  sellingPriceGroup SellingPriceGroup? @relation(fields: [sellingPriceGroupId], references: [id])
   saleItems   SaleItem[]
   alerts      InventoryAlert[]
+  variants    ProductVariant[]
+  history     ProductHistory[]
+  prices      ProductPrice[]
+  labels      ProductLabel[]
+  sellingPriceGroupPrices SellingPriceGroupPrice[]
+  purchaseOrderItems PurchaseOrderItem[]
+  stockAdjustments StockAdjustment[]
   
   @@map("products")
+  @@index([sku], map: "product_sku_idx")
+  @@index([barcode], map: "product_barcode_idx")
+  @@index([createdAt], map: "product_created_at_idx")
+  @@index([name], map: "products_name_idx")
+}
+
+model ProductVariant {
+  id          String   @id @default(cuid())
+  productId   String
+  name        String
+  sku         String?  @unique
+  barcode     String?  @unique
+  price       Float
+  cost        Float
+  stock       Int      @default(0)
+  unitId      String?
+  imageUrl    String?
+  attributes  Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  product     Product  @relation(fields: [productId], references: [id])
+  unit        Unit? @relation(fields: [unitId], references: [id])
+  
+  @@map("product_variants")
+}
+
+model ProductHistory {
+  id          String   @id @default(cuid())
+  productId   String
+  action      String
+  oldValue    String?
+  newValue    String?
+  userId      String
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  product     Product  @relation(fields: [productId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@map("product_history")
 }
 
 model Sale {
@@ -77,15 +139,24 @@ model Sale {
   status      SaleStatus  @default(COMPLETED)
   customerId  String?
   userId      String
+  customerCurrency Currency @default(USD)
+  reference   String?
+  locationId  String?
   notes       String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   
   // Relations
   user       User        @relation(fields: [userId], references: [id])
+  customer   Customer?   @relation(fields: [customerId], references: [id])
   saleItems  SaleItem[]
+  location   BusinessLocation? @relation(fields: [locationId], references: [id])
+  payments   Payment[]   @relation("salePayments")
   
   @@map("sales")
+  @@index([createdAt], map: "sale_created_at_idx")
+  @@index([customerId], map: "sales_customerId_idx")
+  @@index([locationId], map: "sales_locationId_idx")
 }
 
 model SaleItem {
@@ -123,17 +194,456 @@ model Expense {
   title       String
   description String?
   amount      Float
+  currency    Currency      @default(USD)
+  exchangeRate Float       @default(1)
   category    ExpenseCategory
   date        DateTime
   userId      String
+  locationId  String?
   receiptUrl  String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   
   // Relations
   user        User          @relation(fields: [userId], references: [id])
+  location    BusinessLocation? @relation(fields: [locationId], references: [id])
   
   @@map("expenses")
+}
+
+// New models for multi-currency support and enhanced functionality
+
+model Supplier {
+  id              String   @id @default(cuid())
+  companyName     String
+  contactName     String?
+  email           String?  @unique
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?
+  website         String?
+  paymentTerms    String?
+  preferredCurrency Currency @default(USD)
+  taxId           String?
+  notes           String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  purchaseOrders  PurchaseOrder[]
+  
+  @@map("suppliers")
+  @@index([companyName], map: "suppliers_companyName_idx")
+  @@index([email], map: "suppliers_email_idx")
+}
+
+model Customer {
+  id              String   @id @default(cuid())
+  name            String
+  email           String?  @unique
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?
+  dateOfBirth     DateTime?
+  preferredCurrency Currency @default(USD)
+  loyaltyPoints   Int      @default(0)
+  totalSpent      Float    @default(0)
+  lastPurchaseDate DateTime?
+  purchaseCount   Int      @default(0)
+  notes           String?
+  isActive        Boolean  @default(true)
+  groupId         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  group           CustomerGroup? @relation(fields: [groupId], references: [id])
+  sales           Sale[]
+  
+  @@map("customers")
+  @@index([name], map: "customers_name_idx")
+  @@index([email], map: "customers_email_idx")
+}
+
+model CustomerGroup {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  customers   Customer[]
+  rules       CustomerGroupRule[]
+  
+  @@map("customer_groups")
+}
+
+model CustomerGroupRule {
+  id        String              @id @default(cuid())
+  groupId   String
+  ruleType  CustomerGroupRuleType
+  value     String
+  operator  String
+  createdAt DateTime            @default(now())
+  
+  // Relations
+  group     CustomerGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  
+  @@map("customer_group_rules")
+}
+
+model Unit {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  symbol      String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  products    Product[]
+  variants    ProductVariant[]
+  
+  @@map("units")
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  logoUrl     String?
+  website     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  products    Product[]
+  
+  @@map("brands")
+}
+
+model BusinessLocation {
+  id            String   @id @default(cuid())
+  name          String
+  code          String   @unique
+  address       String?
+  city          String?
+  state         String?
+  postalCode    String?
+  country       String?
+  phone         String?
+  email         String?
+  baseCurrency  Currency @default(USD)
+  localCurrency Currency @default(USD)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  sales         Sale[]
+  expenses      Expense[]
+  tables        Table[]
+  receiptPrinters ReceiptPrinter[]
+  barcodeSettings BarcodeSettings[]
+  stockAdjustments StockAdjustment[]
+  taxRates      TaxRate[]
+  
+  @@map("business_locations")
+}
+
+model TaxRate {
+  id          String   @id @default(cuid())
+  name        String
+  rate        Float
+  locationId  String?
+  currency    Currency?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  location    BusinessLocation? @relation(fields: [locationId], references: [id])
+  
+  @@map("tax_rates")
+}
+
+model ReceiptPrinter {
+  id              String   @id @default(cuid())
+  name            String
+  locationId      String
+  connectionType  String   // USB, Network, Bluetooth
+  ipAddress       String?
+  port            String?
+  paperWidth      Int      @default(80) // 58mm, 80mm
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  location        BusinessLocation @relation(fields: [locationId], references: [id])
+  
+  @@map("receipt_printers")
+}
+
+model BarcodeSettings {
+  id              String   @id @default(cuid())
+  locationId      String
+  barcodeType     String   @default("CODE128") // CODE128, CODE39, EAN13, etc.
+  width           Int      @default(2)
+  height          Int      @default(50)
+  displayValue    Boolean  @default(true)
+  fontSize        Int      @default(12)
+  margin          Int      @default(10)
+  showCurrency    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  location        BusinessLocation @relation(fields: [locationId], references: [id])
+  
+  @@map("barcode_settings")
+}
+
+model SalesRepresentative {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  employeeId      String?
+  commissionRate  Float    @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@map("sales_representatives")
+}
+
+model ProductLabel {
+  id          String   @id @default(cuid())
+  name        String
+  productId   String?
+  template    String   // JSON template for label design
+  width       Int      @default(60)
+  height      Int      @default(40)
+  unit        String   @default("mm") // mm, inch
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  product     Product? @relation(fields: [productId], references: [id])
+  
+  @@map("product_labels")
+}
+
+model SellingPriceGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  products    Product[]
+  prices      SellingPriceGroupPrice[]
+  
+  @@map("selling_price_groups")
+}
+
+model SellingPriceGroupPrice {
+  id            String   @id @default(cuid())
+  priceGroupId  String
+  productId     String
+  price         Float
+  currency      Currency @default(USD)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  priceGroup    SellingPriceGroup @relation(fields: [priceGroupId], references: [id], onDelete: Cascade)
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("selling_price_group_prices")
+}
+
+model StockAdjustment {
+  id          String   @id @default(cuid())
+  productId   String
+  locationId  String
+  type        String   // ADD, REMOVE, DAMAGE, EXPIRY
+  quantity    Int
+  reason      String?
+  reference   String?
+  adjustedById String
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  product     Product @relation(fields: [productId], references: [id])
+  location    BusinessLocation @relation(fields: [locationId], references: [id])
+  adjustedBy  User @relation("adjustedBy", fields: [adjustedById], references: [id])
+  
+  @@map("stock_adjustments")
+}
+
+model PurchaseOrder {
+  id                  String   @id @default(cuid())
+  supplierId          String
+  orderNumber         String   @unique
+  reference           String?
+  orderDate           DateTime @default(now())
+  expectedDeliveryDate DateTime?
+  currency            Currency @default(USD)
+  exchangeRate        Float    @default(1)
+  subtotal            Float    @default(0)
+  taxAmount           Float    @default(0)
+  totalAmount         Float    @default(0)
+  notes               String?
+  status              String   @default("PENDING") // PENDING, APPROVED, RECEIVED, CANCELLED
+  createdById         String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  // Relations
+  supplier            Supplier @relation(fields: [supplierId], references: [id])
+  createdBy           User @relation(fields: [createdById], references: [id])
+  items               PurchaseOrderItem[]
+  payments            Payment[] @relation("purchasePayments")
+  
+  @@map("purchase_orders")
+  @@index([supplierId], map: "purchase_orders_supplierId_idx")
+  @@index([orderDate], map: "purchase_orders_orderDate_idx")
+}
+
+model PurchaseOrderItem {
+  id              String   @id @default(cuid())
+  purchaseOrderId String
+  productId       String
+  quantity        Int
+  unitPrice       Float
+  taxRate         Float    @default(0)
+  taxAmount       Float    @default(0)
+  totalPrice      Float
+  receivedQuantity Int     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product         Product @relation(fields: [productId], references: [id])
+  
+  @@map("purchase_order_items")
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  paymentType     String        // SALE, PURCHASE
+  saleId          String?       // For sale payments
+  purchaseOrderId String?       // For purchase order payments
+  amount          Float
+  currency        Currency      @default(USD)
+  exchangeRate    Float         @default(1)
+  paymentMethod   PaymentMethod
+  reference       String?
+  notes           String?
+  paidById        String?
+  paidAt          DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  paidBy          User? @relation(fields: [paidById], references: [id])
+  sale            Sale? @relation("salePayments", fields: [saleId], references: [id])
+  purchaseOrder   PurchaseOrder? @relation("purchasePayments", fields: [purchaseOrderId], references: [id])
+  
+  @@map("payments")
+  @@index([saleId], map: "payments_saleId_idx")
+  @@index([purchaseOrderId], map: "payments_purchaseOrderId_idx")
+  @@index([paidAt], map: "payments_paidAt_idx")
+}
+
+model ScheduledReport {
+  id              String         @id @default(cuid())
+  name            String
+  reportType      String         // profit_loss, sales, inventory, etc.
+  frequency       ReportFrequency
+  cronExpression  String?
+  nextRunAt       DateTime?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  histories       ReportScheduleHistory[]
+  
+  @@map("scheduled_reports")
+}
+
+model ReportScheduleHistory {
+  id                String      @id @default(cuid())
+  scheduledReportId String
+  status            ReportStatus
+  generatedAt       DateTime    @default(now())
+  filePath          String?
+  errorMessage      String?
+  createdAt         DateTime    @default(now())
+  
+  // Relations
+  scheduledReport   ScheduledReport @relation(fields: [scheduledReportId], references: [id], onDelete: Cascade)
+  
+  @@map("report_schedule_histories")
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  subject   String
+  body      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("email_templates")
+}
+
+model CurrencyRate {
+  id          String   @id @default(cuid())
+  fromCurrency Currency
+  toCurrency  Currency
+  rate        Float
+  date        DateTime
+  source      String?
+  createdAt   DateTime @default(now())
+  
+  @@map("currency_rates")
+  @@index([fromCurrency, toCurrency, date], map: "currency_rates_fromCurrency_toCurrency_date_idx")
+}
+
+model ProductPrice {
+  id        String   @id @default(cuid())
+  productId String
+  price     Float
+  currency  Currency @default(USD)
+  cost      Float    @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("product_prices")
 }
 
 enum UserRole {
@@ -171,4 +681,34 @@ enum ExpenseCategory {
   MAINTENANCE
   MARKETING
   OTHER
+}
+
+// New enums for multi-currency support and enhanced functionality
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  CAD
+  KSH
+  ZAR
+}
+
+enum CustomerGroupRuleType {
+  SPENDING_THRESHOLD
+  PURCHASE_FREQUENCY
+  LOCATION
+}
+
+enum ReportFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ReportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }

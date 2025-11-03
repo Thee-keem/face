@@ -1,11 +1,29 @@
 'use client';
 
-import { ReceiptData, formatCurrency, formatDate } from '@/lib/receiptGenerator';
+import { ReceiptData, formatDate } from '@/lib/receiptGenerator';
+import { Currency } from '@prisma/client';
 
 interface ReceiptTemplateProps {
   data: ReceiptData;
   className?: string;
 }
+
+// Create a local formatCurrency function since it's not exported
+const formatCurrency = (amount: number, currency: Currency = Currency.USD): string => {
+  const currencySymbols: Record<string, string> = {
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'CAD': 'C$',
+    'KSH': 'KSh',
+    'ZAR': 'R'
+  };
+  
+  const symbol = currencySymbols[currency] || currency;
+  const decimalPlaces = currency === Currency.KSH ? 0 : 2;
+  
+  return `${symbol}${amount.toFixed(decimalPlaces)}`;
+};
 
 export default function ReceiptTemplate({ data, className = '' }: ReceiptTemplateProps) {
   return (
@@ -76,8 +94,8 @@ export default function ReceiptTemplate({ data, className = '' }: ReceiptTemplat
                 {item.name}
               </div>
               <div className="col-span-2 text-center">{item.quantity}</div>
-              <div className="col-span-2 text-right">{formatCurrency(item.unitPrice)}</div>
-              <div className="col-span-3 text-right">{formatCurrency(item.totalPrice)}</div>
+              <div className="col-span-2 text-right">{formatCurrency(item.unitPrice, item.currency)}</div>
+              <div className="col-span-3 text-right">{formatCurrency(item.totalPrice, item.currency)}</div>
             </div>
           ))}
         </div>
@@ -87,26 +105,26 @@ export default function ReceiptTemplate({ data, className = '' }: ReceiptTemplat
       <div className="border-t border-gray-300 pt-2 space-y-1">
         <div className="flex justify-between text-sm">
           <span className="text-gray-600">Subtotal:</span>
-          <span className="text-gray-900">{formatCurrency(data.subtotal)}</span>
+          <span className="text-gray-900">{formatCurrency(data.subtotal, data.currency)}</span>
         </div>
         
         {data.discount > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Discount:</span>
-            <span className="text-red-600">-{formatCurrency(data.discount)}</span>
+            <span className="text-red-600">-{formatCurrency(data.discount, data.currency)}</span>
           </div>
         )}
         
         {data.tax > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Tax:</span>
-            <span className="text-gray-900">{formatCurrency(data.tax)}</span>
+            <span className="text-gray-900">{formatCurrency(data.tax, data.currency)}</span>
           </div>
         )}
         
         <div className="flex justify-between text-base font-bold border-t border-gray-300 pt-2">
           <span className="text-gray-900">TOTAL:</span>
-          <span className="text-gray-900">{formatCurrency(data.total)}</span>
+          <span className="text-gray-900">{formatCurrency(data.total, data.currency)}</span>
         </div>
       </div>
 

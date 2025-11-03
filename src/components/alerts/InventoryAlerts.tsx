@@ -65,7 +65,8 @@ interface InventoryAlert {
 
 export default function InventoryAlerts() {
   const dispatch = useDispatch();
-  const { data: alerts, isLoading, refetch } = useGetInventoryAlertsQuery();
+  // Fix: Provide default argument to the query hook
+  const { data: alerts, isLoading, refetch } = useGetInventoryAlertsQuery({});
   const [markAlertAsRead] = useMarkAlertAsReadMutation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread' | 'low-stock' | 'out-of-stock' | 'overstock'>('all');
@@ -178,16 +179,17 @@ export default function InventoryAlerts() {
     }
   };
 
+  // Fix: Remove 'warning' variant which doesn't exist in the Badge component
   const getAlertVariant = (type: string) => {
     switch (type) {
       case 'LOW_STOCK':
-        return 'warning' as const;
+        return 'secondary';
       case 'OUT_OF_STOCK':
-        return 'destructive' as const;
+        return 'destructive';
       case 'OVERSTOCK':
-        return 'secondary' as const;
+        return 'secondary';
       default:
-        return 'default' as const;
+        return 'default';
     }
   };
 
@@ -411,7 +413,7 @@ export default function InventoryAlerts() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getAlertIcon(alert.type)}
-                      <Badge variant={getAlertVariant(alert.type)}>
+                      <Badge variant={getAlertVariant(alert.type) as any}>
                         {getAlertTypeLabel(alert.type)}
                       </Badge>
                     </div>
