@@ -467,6 +467,8 @@ export default function BusinessSettingsPage() {
                 onValueChange={(value) => {
                   setBaseCurrency(value)
                   setOperationalSettings({ ...operationalSettings, currency: value })
+                  // Save to localStorage for persistence
+                  localStorage.setItem('selectedCurrency', value)
                 }}
               />
             </div>

@@ -36,6 +36,7 @@ import {
   DollarSign,
   Package
 } from 'lucide-react'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 // Mock data for supplier report
 const supplierPerformance = [
@@ -56,6 +57,7 @@ const topSuppliers = [
 ]
 
 export default function SupplierReportPage() {
+  const { baseCurrency, format } = useCurrency()
   const [dateRange, setDateRange] = useState({ start: '2024-01-01', end: '2024-06-30' })
   const [exportFormat, setExportFormat] = useState('csv')
   const [searchTerm, setSearchTerm] = useState('')
@@ -113,7 +115,7 @@ export default function SupplierReportPage() {
               />
             </div>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <Select value={exportFormat} onValueChange={setExportFormat}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue />
@@ -124,16 +126,16 @@ export default function SupplierReportPage() {
                 <SelectItem value="xlsx">Excel</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button onClick={handleExport} className="whitespace-nowrap">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </CardContent>
       </Card>
       
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Suppliers</CardTitle>
@@ -150,7 +152,7 @@ export default function SupplierReportPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalSpent.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalSpent, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+12% from last period</p>
           </CardContent>
         </Card>
@@ -160,7 +162,7 @@ export default function SupplierReportPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${avgOrderValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{format(avgOrderValue, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+5% from last period</p>
           </CardContent>
         </Card>
@@ -213,7 +215,12 @@ export default function SupplierReportPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value, name) => {
+                  if (name === 'totalSpent') {
+                    return [format(Number(value), baseCurrency), 'Total Spent'];
+                  }
+                  return [value, name];
+                }} />
                 <Legend />
                 <Line 
                   type="monotone" 
@@ -256,28 +263,32 @@ export default function SupplierReportPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Supplier</TableHead>
-                <TableHead>Contact</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead className="text-right">Orders</TableHead>
-                <TableHead className="text-right">Products</TableHead>
-                <TableHead className="text-right">On-Time Rate</TableHead>
-                <TableHead className="text-right">Total Spent</TableHead>
+                <TableHead>Total Spent</TableHead>
+                <TableHead>Orders</TableHead>
+                <TableHead>On-Time Rate</TableHead>
+                <TableHead>Products</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredSuppliers.map((supplier) => (
                 <TableRow key={supplier.id}>
-                  <TableCell className="font-medium">{supplier.name}</TableCell>
-                  <TableCell>{supplier.contact}</TableCell>
-                  <TableCell>{supplier.email}</TableCell>
-                  <TableCell className="text-right">{supplier.orders}</TableCell>
-                  <TableCell className="text-right">{supplier.products}</TableCell>
-                  <TableCell className="text-right">
-                    <Badge variant={supplier.onTimeRate > 90 ? 'default' : 'secondary'}>
-                      {supplier.onTimeRate}%
-                    </Badge>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{supplier.name}</div>
+                      <div className="text-sm text-muted-foreground">{supplier.contact}</div>
+                      <div className="text-sm text-muted-foreground">{supplier.email}</div>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-right">${supplier.totalSpent.toLocaleString()}</TableCell>
+                  <TableCell>{format(supplier.totalSpent, baseCurrency)}</TableCell>
+                  <TableCell>{supplier.orders}</TableCell>
+                  <TableCell>{supplier.onTimeRate}%</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Package className="h-4 w-4 mr-1 text-muted-foreground" />
+                      {supplier.products}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

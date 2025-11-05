@@ -41,8 +41,10 @@ import {
   Filter
 } from 'lucide-react'
 import { MOCK_PURCHASE_ORDERS } from '@/lib/mockData'
+import { useCurrency } from '@/contexts/CurrencyContext' // Add this import
 
 export default function ListPurchasesPage() {
+  const { baseCurrency, format } = useCurrency() // Add this hook
   const [purchases] = useState(MOCK_PURCHASE_ORDERS)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -169,7 +171,7 @@ export default function ListPurchasesPage() {
                   <TableCell>
                     {purchase.received}/{purchase.items}
                   </TableCell>
-                  <TableCell>${purchase.total.toFixed(2)}</TableCell>
+                  <TableCell>{format(purchase.total, baseCurrency)}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(purchase.status)}>
                       {getStatusText(purchase.status)}

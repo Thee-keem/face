@@ -45,13 +45,19 @@ const CurrencyContext = createContext<CurrencyContextType>(defaultCurrencyContex
 
 // Provider component
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [baseCurrency, setBaseCurrency] = useState<Currency>(Currency.USD)
+  const [baseCurrency, setBaseCurrencyState] = useState<Currency>(Currency.USD)
   const [rates, setRates] = useState<Record<string, CurrencyRate>>({})
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Initialize with mock data
+  // Initialize with persisted currency or mock data
   useEffect(() => {
+    // Load saved currency from localStorage
+    const savedCurrency = localStorage.getItem('selectedCurrency')
+    if (savedCurrency && Object.values(Currency).includes(savedCurrency as Currency)) {
+      setBaseCurrencyState(savedCurrency as Currency)
+    }
+
     const initialRates: Record<string, CurrencyRate> = {}
     MOCK_CURRENCY_RATES.forEach(rate => {
       const key = `${rate.fromCurrency}-${rate.toCurrency}`
@@ -60,6 +66,12 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     
     setRates(initialRates)
   }, [])
+
+  // Persist currency to localStorage when it changes
+  const setBaseCurrency = (currency: Currency) => {
+    setBaseCurrencyState(currency)
+    localStorage.setItem('selectedCurrency', currency)
+  }
 
   // Update a specific rate
   const updateRate = (from: string, to: string, rate: number) => {

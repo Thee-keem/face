@@ -39,6 +39,7 @@ import {
   AlertTriangle,
   DollarSign
 } from 'lucide-react'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 // Mock data for inventory report
 const inventoryTrend = [
@@ -69,6 +70,7 @@ const lowStockItems = [
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1']
 
 export default function InventoryReportPage() {
+  const { baseCurrency, format } = useCurrency()
   const [dateRange, setDateRange] = useState({ start: '2024-01-01', end: '2024-06-30' })
   const [exportFormat, setExportFormat] = useState('csv')
   const [searchTerm, setSearchTerm] = useState('')
@@ -134,7 +136,7 @@ export default function InventoryReportPage() {
               />
             </div>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <Select value={exportFormat} onValueChange={setExportFormat}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue />
@@ -145,16 +147,16 @@ export default function InventoryReportPage() {
                 <SelectItem value="xlsx">Excel</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button onClick={handleExport} className="whitespace-nowrap">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </CardContent>
       </Card>
       
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Items</CardTitle>
@@ -171,7 +173,7 @@ export default function InventoryReportPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalValue, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+3.2% from last period</p>
           </CardContent>
         </Card>
@@ -212,7 +214,12 @@ export default function InventoryReportPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value, name) => {
+                  if (name === 'totalValue') {
+                    return [format(Number(value), baseCurrency), 'Total Value'];
+                  }
+                  return [value, name];
+                }} />
                 <Legend />
                 <Line 
                   type="monotone" 
@@ -236,6 +243,14 @@ export default function InventoryReportPage() {
                   dataKey="outOfStock" 
                   stroke="#ff7c7c" 
                   name="Out of Stock"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="totalValue" 
+                  stroke="#8dd1e1" 
+                  name="Total Value"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                 />

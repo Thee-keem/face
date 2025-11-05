@@ -33,8 +33,10 @@ import {
   CreditCard
 } from 'lucide-react'
 import { MOCK_SUPPLIERS } from '@/lib/mockData'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 export default function SuppliersPage() {
+  const { baseCurrency, format } = useCurrency()
   const [suppliers] = useState(MOCK_SUPPLIERS)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -69,14 +71,14 @@ export default function SuppliersPage() {
       
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Supplier List</CardTitle>
               <CardDescription>
                 View and manage all your suppliers
               </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -86,9 +88,9 @@ export default function SuppliersPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button onClick={handleAddSupplier}>
+              <Button onClick={handleAddSupplier} className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
-                Add New Supplier
+                <span className="hidden sm:inline">Add New Supplier</span>
               </Button>
             </div>
           </div>
@@ -98,12 +100,12 @@ export default function SuppliersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Supplier</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Products</TableHead>
+                <TableHead className="hidden sm:table-cell">Contact</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden md:table-cell">Phone</TableHead>
+                <TableHead className="hidden sm:table-cell">Products</TableHead>
                 <TableHead>Total Spent</TableHead>
-                <TableHead>Terms</TableHead>
+                <TableHead className="hidden sm:table-cell">Terms</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -111,18 +113,21 @@ export default function SuppliersPage() {
             <TableBody>
               {filteredSuppliers.map((supplier) => (
                 <TableRow key={supplier.id}>
-                  <TableCell className="font-medium">{supplier.name}</TableCell>
-                  <TableCell>{supplier.contactPerson}</TableCell>
-                  <TableCell>{supplier.email}</TableCell>
-                  <TableCell>{supplier.phone}</TableCell>
                   <TableCell>
+                    <div className="font-medium">{supplier.name}</div>
+                    <div className="text-sm text-muted-foreground sm:hidden">{supplier.contactPerson}</div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">{supplier.contactPerson}</TableCell>
+                  <TableCell className="hidden md:table-cell">{supplier.email}</TableCell>
+                  <TableCell className="hidden md:table-cell">{supplier.phone}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <div className="flex items-center">
                       <Package className="h-4 w-4 mr-1 text-muted-foreground" />
                       {supplier.products}
                     </div>
                   </TableCell>
-                  <TableCell>${supplier.totalSpent.toFixed(2)}</TableCell>
-                  <TableCell>
+                  <TableCell>{format(supplier.totalSpent, baseCurrency)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Badge variant="outline">{supplier.paymentTerms}</Badge>
                   </TableCell>
                   <TableCell>

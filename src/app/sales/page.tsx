@@ -46,12 +46,15 @@ import {
 import { setSales, updateSaleStatus } from '@/features/sales/salesSlice';
 import type { RootState } from '@/lib/store';
 import { toast } from 'sonner';
+import { useCurrency } from '@/contexts/CurrencyContext'; // Add this import
+import { Currency } from '@prisma/client'; // Add this import
 
 export default function SalesPage() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const { sales } = useSelector((state: RootState) => state.sales);
+  const { baseCurrency, format } = useCurrency(); // Add this hook
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
@@ -219,7 +222,7 @@ export default function SalesPage() {
             View and manage all sales transactions.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={handleExport} className="whitespace-nowrap">
             <Download className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Export</span>
@@ -240,7 +243,7 @@ export default function SalesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold">
-              ${displaySales.reduce((sum, sale) => sum + sale.total, 0).toFixed(2)}
+              {format(displaySales.reduce((sum, sale) => sum + sale.total, 0), baseCurrency)}
             </div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
@@ -266,7 +269,7 @@ export default function SalesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold">
-              ${displaySales.length > 0 ? (displaySales.reduce((sum, sale) => sum + sale.total, 0) / displaySales.length).toFixed(2) : '0.00'}
+              {displaySales.length > 0 ? format(displaySales.reduce((sum, sale) => sum + sale.total, 0) / displaySales.length, baseCurrency) : format(0, baseCurrency)}
             </div>
             <p className="text-xs text-muted-foreground">
               +5.2% from last month
@@ -352,7 +355,7 @@ export default function SalesPage() {
                   <TableHead>Customer</TableHead>
                   <TableHead className="hidden md:table-cell">Items</TableHead>
                   <TableHead>Total</TableHead>
-                  <TableHead className="hidden sm:table-cell">Payment</TableHead>
+                  <TableHead className="hidden sm:table-cell tablet:table-cell">Payment</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden lg:table-cell">Staff</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -373,7 +376,7 @@ export default function SalesPage() {
                         {sale.items.length} item{sale.items.length > 1 ? 's' : ''}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">${sale.total.toFixed(2)}</TableCell>
+                    <TableCell className="font-medium">{format(sale.total, baseCurrency)}</TableCell>
                     <TableCell className="hidden sm:table-cell">
                       {getPaymentMethodBadge(sale.paymentMethod)}
                     </TableCell>
@@ -458,7 +461,7 @@ export default function SalesPage() {
                       <div>
                         <span className="font-medium">{item.quantity}x {item.name}</span>
                       </div>
-                      <span>${(item.quantity * item.price).toFixed(2)}</span>
+                      <span>{format(item.quantity * item.price, baseCurrency)}</span>
                     </div>
                   ))}
                 </div>
@@ -467,15 +470,15 @@ export default function SalesPage() {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span>${selectedSale.subtotal.toFixed(2)}</span>
+                  <span>{format(selectedSale.subtotal, baseCurrency)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Tax:</span>
-                  <span>${selectedSale.tax.toFixed(2)}</span>
+                  <span>{format(selectedSale.tax, baseCurrency)}</span>
                 </div>
                 <div className="flex justify-between font-medium text-base pt-2 border-t">
                   <span>Total:</span>
-                  <span>${selectedSale.total.toFixed(2)}</span>
+                  <span>{format(selectedSale.total, baseCurrency)}</span>
                 </div>
               </div>
             </div>

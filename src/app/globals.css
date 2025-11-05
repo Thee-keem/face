@@ -120,3 +120,102 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Custom responsive utilities for better mobile experience */
+  .text-responsive {
+    @apply text-sm md:text-base;
+  }
+  
+  .text-responsive-lg {
+    @apply text-base md:text-lg;
+  }
+  
+  .text-responsive-xl {
+    @apply text-lg md:text-xl;
+  }
+  
+  .text-responsive-2xl {
+    @apply text-xl md:text-2xl;
+  }
+  
+  .text-responsive-3xl {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  .p-responsive {
+    @apply p-2 md:p-4;
+  }
+  
+  .p-responsive-x {
+    @apply px-2 md:px-4;
+  }
+  
+  .p-responsive-y {
+    @apply py-2 md:py-4;
+  }
+  
+  .gap-responsive {
+    @apply gap-2 md:gap-4;
+  }
+  
+  .grid-responsive {
+    @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  .table-responsive {
+    @apply block overflow-x-auto;
+  }
+  
+  /* Ensure dialogs are responsive on mobile */
+  .dialog-responsive {
+    @apply w-full max-w-[calc(100vw-2rem)] sm:max-w-lg;
+  }
+  
+  /* Better handling of long text */
+  .text-ellipsis {
+    @apply truncate;
+  }
+  
+  .text-wrap-balance {
+    @apply text-balance;
+  }
+  
+  /* Tablet-specific utilities */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .tablet\:grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .tablet\:grid-cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    
+    .tablet\:text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    
+    .tablet\:px-3 {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    
+    .tablet\:py-2 {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    
+    .tablet\:gap-3 {
+      gap: 0.75rem;
+    }
+    
+    .tablet\:hidden {
+      display: none;
+    }
+    
+    .tablet\:table-cell {
+      display: table-cell;
+    }
+  }
+}

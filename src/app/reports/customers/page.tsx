@@ -37,6 +37,7 @@ import {
   DollarSign,
   MapPin
 } from 'lucide-react'
+import { useCurrency } from '@/contexts/CurrencyContext' // Add this import
 
 // Mock data for customer report
 const customerData = [
@@ -67,6 +68,7 @@ const customerDemographics = [
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1']
 
 export default function CustomerReportPage() {
+  const { baseCurrency, format } = useCurrency() // Add this hook
   const [dateRange, setDateRange] = useState({ start: '2024-01-01', end: '2024-06-30' })
   const [exportFormat, setExportFormat] = useState('csv')
   const [searchTerm, setSearchTerm] = useState('')
@@ -124,7 +126,7 @@ export default function CustomerReportPage() {
               />
             </div>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <Select value={exportFormat} onValueChange={setExportFormat}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue />
@@ -135,16 +137,16 @@ export default function CustomerReportPage() {
                 <SelectItem value="xlsx">Excel</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button onClick={handleExport} className="whitespace-nowrap">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </CardContent>
       </Card>
       
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
@@ -161,7 +163,7 @@ export default function CustomerReportPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalRevenue, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+8% from last period</p>
           </CardContent>
         </Card>
@@ -171,7 +173,7 @@ export default function CustomerReportPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${avgCustomerValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{format(avgCustomerValue, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+3% from last period</p>
           </CardContent>
         </Card>
@@ -202,7 +204,12 @@ export default function CustomerReportPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip formatter={(value, name) => {
+                  if (name === 'totalRevenue') {
+                    return [format(Number(value), baseCurrency), 'Revenue'];
+                  }
+                  return [value, name];
+                }} />
                 <Legend />
                 <Bar dataKey="newCustomers" fill="#8884d8" name="New Customers" />
                 <Bar dataKey="returningCustomers" fill="#82ca9d" name="Returning Customers" />
@@ -278,16 +285,20 @@ export default function CustomerReportPage() {
             <TableBody>
               {filteredCustomers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell>{customer.email}</TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{customer.name}</div>
+                      <div className="text-sm text-muted-foreground">{customer.email}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{format(customer.totalSpent, baseCurrency)}</TableCell>
+                  <TableCell>{customer.orders}</TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
                       {customer.location}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">{customer.orders}</TableCell>
-                  <TableCell className="text-right">${customer.totalSpent.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

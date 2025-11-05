@@ -39,8 +39,10 @@ import {
   Eye 
 } from 'lucide-react'
 import { MOCK_CUSTOMERS } from '@/lib/mockData'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 export default function CustomersPage() {
+  const { baseCurrency, format } = useCurrency()
   const [customers] = useState(MOCK_CUSTOMERS)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -69,11 +71,29 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-        <p className="text-muted-foreground">
-          Manage your customer database and relationships
-        </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Customers</h1>
+          <p className="text-muted-foreground">
+            Manage your customer database and relationships
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search customers..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleAddCustomer} className="whitespace-nowrap">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Add New Customer</span>
+          </Button>
+        </div>
       </div>
       
       <Card>
@@ -107,11 +127,11 @@ export default function CustomersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
+                <TableHead className="hidden sm:table-cell">Email</TableHead>
+                <TableHead className="hidden md:table-cell">Phone</TableHead>
                 <TableHead>Total Spent</TableHead>
-                <TableHead>Orders</TableHead>
-                <TableHead>Group</TableHead>
+                <TableHead className="hidden sm:table-cell">Orders</TableHead>
+                <TableHead className="hidden md:table-cell">Group</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -119,12 +139,15 @@ export default function CustomersPage() {
             <TableBody>
               {filteredCustomers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>${customer.totalSpent.toFixed(2)}</TableCell>
-                  <TableCell>{customer.orders}</TableCell>
                   <TableCell>
+                    <div className="font-medium">{customer.name}</div>
+                    <div className="text-sm text-muted-foreground sm:hidden">{customer.email}</div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">{customer.email}</TableCell>
+                  <TableCell className="hidden md:table-cell">{customer.phone}</TableCell>
+                  <TableCell>{format(customer.totalSpent, baseCurrency)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{customer.orders}</TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge variant="secondary">{customer.group}</Badge>
                   </TableCell>
                   <TableCell>

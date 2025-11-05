@@ -44,16 +44,6 @@ export async function GET(request: Request) {
       orderBy: {
         createdAt: 'desc',
       },
-      include: {
-        tables: {
-          where: { isActive: true },
-          select: { id: true, name: true },
-        },
-        receiptPrinters: {
-          where: { isActive: true },
-          select: { id: true, name: true },
-        },
-      },
     });
     
     return NextResponse.json(locations);

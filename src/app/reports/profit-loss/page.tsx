@@ -36,6 +36,7 @@ import {
   DollarSign,
   Package
 } from 'lucide-react'
+import { useCurrency } from '@/contexts/CurrencyContext' // Add this import
 
 // Mock data for profit and loss report
 const profitLossData = [
@@ -57,6 +58,7 @@ const expenseBreakdown = [
 ]
 
 export default function ProfitLossReportPage() {
+  const { baseCurrency, format } = useCurrency() // Add this hook
   const [dateRange, setDateRange] = useState({ start: '2024-01-01', end: '2024-06-30' })
   const [exportFormat, setExportFormat] = useState('csv')
 
@@ -111,7 +113,7 @@ export default function ProfitLossReportPage() {
               />
             </div>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <Select value={exportFormat} onValueChange={setExportFormat}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue />
@@ -122,23 +124,23 @@ export default function ProfitLossReportPage() {
                 <SelectItem value="xlsx">Excel</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button onClick={handleExport} className="whitespace-nowrap">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </CardContent>
       </Card>
       
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalRevenue, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+12% from last period</p>
           </CardContent>
         </Card>
@@ -148,7 +150,7 @@ export default function ProfitLossReportPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalGrossProfit.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalGrossProfit, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">
               Margin: {grossProfitMargin.toFixed(1)}%
             </p>
@@ -160,7 +162,7 @@ export default function ProfitLossReportPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalNetProfit.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalNetProfit, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">
               Margin: {netProfitMargin.toFixed(1)}%
             </p>
@@ -183,7 +185,7 @@ export default function ProfitLossReportPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']} />
+                <Tooltip formatter={(value) => [format(Number(value), baseCurrency), 'Amount']} />
                 <Legend />
                 <Area 
                   type="monotone" 

@@ -44,6 +44,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useGetInventoryAlertsQuery, useMarkAlertAsReadMutation } from '@/features/api/apiSlice';
+import { useSocket } from '@/hooks/useSocket';
 import type { RootState } from '@/lib/store';
 
 interface InventoryAlert {
@@ -63,6 +64,13 @@ interface InventoryAlert {
   };
 }
 
+interface InventoryUpdate {
+  productId: string;
+  stock: number;
+  productName: string;
+  timestamp: string;
+}
+
 export default function InventoryAlerts() {
   const dispatch = useDispatch();
   // Fix: Provide default argument to the query hook
@@ -70,6 +78,7 @@ export default function InventoryAlerts() {
   const [markAlertAsRead] = useMarkAlertAsReadMutation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread' | 'low-stock' | 'out-of-stock' | 'overstock'>('all');
+  const { socket, isConnected } = useSocket();
 
   // Mock alerts data for now
   const mockAlerts: InventoryAlert[] = [
@@ -138,6 +147,22 @@ export default function InventoryAlerts() {
       }
     }
   ];
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for inventory updates
+    socket.on('inventoryUpdate', (data: InventoryUpdate) => {
+      console.log('Inventory update received:', data);
+      // Refetch alerts when inventory is updated
+      refetch();
+    });
+
+    // Clean up listener on unmount
+    return () => {
+      socket.off('inventoryUpdate');
+    };
+  }, [socket, refetch]);
 
   const filteredAlerts = mockAlerts.filter(alert => {
     if (filter === 'unread') return !alert.isRead;

@@ -37,6 +37,7 @@ import {
   DollarSign,
   CreditCard
 } from 'lucide-react'
+import { useCurrency } from '@/contexts/CurrencyContext' // Add this import
 
 // Mock data for expense report
 const expenseData = [
@@ -67,6 +68,7 @@ const recentExpenses = [
 ]
 
 export default function ExpenseReportPage() {
+  const { baseCurrency, format } = useCurrency() // Add this hook
   const [dateRange, setDateRange] = useState({ start: '2024-01-01', end: '2024-06-30' })
   const [exportFormat, setExportFormat] = useState('csv')
   const [searchTerm, setSearchTerm] = useState('')
@@ -132,7 +134,7 @@ export default function ExpenseReportPage() {
               />
             </div>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <Select value={exportFormat} onValueChange={setExportFormat}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue />
@@ -143,23 +145,23 @@ export default function ExpenseReportPage() {
                 <SelectItem value="xlsx">Excel</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button onClick={handleExport} className="whitespace-nowrap">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </CardContent>
       </Card>
       
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalExpenses.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalExpenses, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+8% from last period</p>
           </CardContent>
         </Card>
@@ -169,7 +171,7 @@ export default function ExpenseReportPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${avgMonthlyExpense.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{format(avgMonthlyExpense, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+3% from last period</p>
           </CardContent>
         </Card>
@@ -179,7 +181,7 @@ export default function ExpenseReportPage() {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${highestExpense.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(highestExpense, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">Employee Salaries</p>
           </CardContent>
         </Card>
@@ -210,7 +212,7 @@ export default function ExpenseReportPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value}`, 'Amount']} />
+                <Tooltip formatter={(value) => [format(Number(value), baseCurrency), 'Amount']} />
                 <Legend />
                 <Bar dataKey="salaries" fill="#8884d8" name="Salaries" />
                 <Bar dataKey="rent" fill="#82ca9d" name="Rent" />
@@ -307,13 +309,15 @@ export default function ExpenseReportPage() {
             <TableBody>
               {filteredExpenses.map((expense) => (
                 <TableRow key={expense.id}>
-                  <TableCell className="font-medium">{expense.title}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{expense.category}</Badge>
+                    <div>
+                      <div className="font-medium">{expense.title}</div>
+                      <div className="text-sm text-muted-foreground">{expense.category}</div>
+                    </div>
                   </TableCell>
                   <TableCell>{expense.date}</TableCell>
+                  <TableCell>{format(expense.amount, baseCurrency)}</TableCell>
                   <TableCell>{expense.department}</TableCell>
-                  <TableCell className="text-right">${expense.amount.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

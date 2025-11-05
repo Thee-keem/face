@@ -5,35 +5,32 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Starting database migration...');
   
-  // Run the migration SQL file
-  const fs = await import('fs');
-  const path = await import('path');
+  // This script is kept for backward compatibility
+  // For new projects, use `npx prisma migrate dev` instead
+  console.log('This script is deprecated. Please use `npx prisma migrate dev` for migrations.');
+  console.log('Running `npx prisma migrate dev` automatically...');
   
+  // Instead of running raw SQL, we'll use Prisma's built-in migration system
+  // This avoids the issue of trying to re-apply migrations that already exist
   try {
-    const migrationPath = path.join(__dirname, 'migrations', '20251031052800_extensions', 'migration.sql');
-    const migrationSql = fs.readFileSync(migrationPath, 'utf8');
+    // Run Prisma migrations using the CLI
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
     
-    // Split the migration into individual statements
-    const statements = migrationSql
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0);
-    
-    console.log(`Executing ${statements.length} statements...`);
-    
-    for (const statement of statements) {
-      try {
-        await prisma.$executeRawUnsafe(statement);
-        console.log('Statement executed successfully');
-      } catch (error) {
-        console.error('Error executing statement:', error);
-        console.log('Statement:', statement.substring(0, 100) + '...');
-      }
+    const { stdout, stderr } = await execAsync('npx prisma migrate dev --skip-generate');
+    console.log(stdout);
+    if (stderr) {
+      console.error('stderr:', stderr);
     }
     
-    console.log('Database migration completed successfully!');
+    console.log('Database migration completed successfully using Prisma migrate!');
   } catch (error) {
     console.error('Migration failed:', error);
+    console.log('Falling back to manual migration check...');
+    
+    // If Prisma CLI fails, we can add manual migration logic here if needed
+    console.log('Manual migration logic would go here if needed.');
   }
 }
 

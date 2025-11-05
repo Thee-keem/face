@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Icons } from '@/components/ui/icons'
@@ -16,6 +16,7 @@ import {
   MenuIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  ChevronLeftIcon,
   FileTextIcon,
   UserIcon,
   BuildingIcon,
@@ -66,6 +67,8 @@ const navigationItems = [
       { name: 'All Products', href: '/inventory', roles: ['MANAGER', 'ADMIN'] },
       { name: 'Adjust Inventory', href: '/inventory/adjust', roles: ['MANAGER', 'ADMIN'] },
       { name: 'Import Products', href: '/inventory/import', roles: ['MANAGER', 'ADMIN'] },
+      { name: 'Realtime Demo', href: '/inventory/realtime-demo', roles: ['MANAGER', 'ADMIN'] },
+      { name: 'Connection Test', href: '/inventory/realtime-demo/test-connection', roles: ['MANAGER', 'ADMIN'] },
     ]
   },
   { 
@@ -164,6 +167,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
   const [selectedLocation, setSelectedLocation] = useState<{name: string, address: string} | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Remove the useEffect that redirects unauthenticated users since that's handled by ProtectedRoute
 
@@ -262,6 +266,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // Auto-collapse sidebar on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) { // md breakpoint
+        setSidebarCollapsed(true)
+      } else {
+        setSidebarCollapsed(false)
+      }
+    }
+
+    // Set initial state
+    handleResize()
+
+    // Add event listener
+    window.addEventListener('resize', handleResize)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const handleLogout = async () => {
     try {
       // Call our custom logout API to clear user context
@@ -291,6 +315,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }))
   }
 
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => !prev)
+  }, [])
+
   // Auto-expand sections based on current path
   // Memoize the effect dependencies to prevent infinite loop
   const navigationDeps = useMemo(() => 
@@ -311,7 +339,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, navigationDeps])
 
-  const renderNavItem = (item: typeof navigationItems[0], isMobile: boolean = false) => {
+  const renderNavItem = (item: typeof navigationItems[0], isMobile: boolean = false, isCollapsed: boolean = false) => {
     const Icon = item.icon
     const isActive = pathname === item.href
     const hasChildren = item.children && item.children.length > 0
@@ -324,6 +352,62 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     ) || []
     
     const showChildren = hasChildren && filteredChildren.length > 0 && isExpanded
+
+    if (isCollapsed) {
+      // Collapsed view - only show icon
+      return (
+        <div key={item.name} className="relative group">
+          <Link
+            href={item.href}
+            onClick={(e) => {
+              if (isMobile) setSidebarOpen(false)
+              if (hasChildren) {
+                e.preventDefault()
+                toggleSection(item.name)
+              }
+            }}
+            className={`flex items-center justify-center rounded-lg p-2 text-sm transition-colors ${
+              isActive
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+            title={item.name}
+          >
+            <Icon className="h-5 w-5" />
+          </Link>
+          {/* Tooltip for collapsed items */}
+          <div className="absolute left-full ml-2 top-0 bg-background border rounded-md px-2 py-1 text-sm whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+            {item.name}
+          </div>
+          
+          {showChildren && !isMobile && (
+            <div className="absolute left-full ml-2 top-0 bg-background border rounded-md p-2 shadow-lg z-40 min-w-[200px]">
+              <ul className="space-y-1">
+                {filteredChildren.map((child) => {
+                  const childIsActive = pathname === child.href
+                  return (
+                    <li key={child.name}>
+                      <Link
+                        href={child.href}
+                        onClick={() => isMobile && setSidebarOpen(false)}
+                        className={`flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors ${
+                          childIsActive
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}
+                      >
+                        <span className="text-xs">•</span>
+                        <span>{child.name}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+        </div>
+      )
+    }
 
     return (
       <div key={item.name}>
@@ -415,20 +499,36 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       {/* Desktop sidebar */}
-      <div className="hidden w-64 flex-col border-r bg-background md:flex">
+      <div className={`hidden border-r bg-background md:flex flex-col transition-all duration-300 ease-in-out ${
+        sidebarCollapsed ? 'w-16' : 'w-64'
+      }`}>
         <div className="border-b p-4">
-          <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-2 ${sidebarCollapsed ? 'justify-center' : ''}`}>
             <PackageIcon className="h-6 w-6" />
-            <span className="text-lg font-semibold">Inventory Management Pro</span>
+            {!sidebarCollapsed && (
+              <span className="text-lg font-semibold truncate">Inventory Management Pro</span>
+            )}
           </div>
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-2">
-            {filteredNavigation.map((item) => renderNavItem(item))}
+          <ul className={`space-y-1 ${sidebarCollapsed ? 'px-1' : 'px-2'}`}>
+            {filteredNavigation.map((item) => renderNavItem(item, false, sidebarCollapsed))}
           </ul>
         </nav>
         <div className="border-t p-4">
-          {/* Removed logout button from desktop sidebar */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="w-full flex justify-center"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? (
+              <ChevronRightIcon className="h-4 w-4" />
+            ) : (
+              <ChevronLeftIcon className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 

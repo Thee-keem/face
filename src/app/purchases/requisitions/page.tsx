@@ -40,8 +40,10 @@ import {
   FileText
 } from 'lucide-react'
 import { MOCK_PURCHASE_REQUISITIONS } from '@/lib/mockData'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 export default function PurchaseRequisitionsPage() {
+  const { baseCurrency, format } = useCurrency()
   const [requisitions] = useState(MOCK_PURCHASE_REQUISITIONS)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -88,14 +90,14 @@ export default function PurchaseRequisitionsPage() {
       
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Purchase Requisitions</CardTitle>
               <CardDescription>
                 View and manage all purchase requisitions
               </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -105,9 +107,9 @@ export default function PurchaseRequisitionsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button onClick={handleCreateRequisition}>
+              <Button onClick={handleCreateRequisition} className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
-                New Requisition
+                <span className="hidden sm:inline">New Requisition</span>
               </Button>
             </div>
           </div>
@@ -117,10 +119,10 @@ export default function PurchaseRequisitionsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Requisition ID</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="hidden sm:table-cell">Date</TableHead>
                 <TableHead>Requested By</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Items</TableHead>
+                <TableHead className="hidden md:table-cell">Department</TableHead>
+                <TableHead className="hidden sm:table-cell">Items</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -130,11 +132,11 @@ export default function PurchaseRequisitionsPage() {
               {filteredRequisitions.map((requisition) => (
                 <TableRow key={requisition.id}>
                   <TableCell className="font-medium">{requisition.id}</TableCell>
-                  <TableCell>{requisition.date}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{requisition.date}</TableCell>
                   <TableCell>{requisition.requestedBy}</TableCell>
-                  <TableCell>{requisition.department}</TableCell>
-                  <TableCell>{requisition.items}</TableCell>
-                  <TableCell>${requisition.total.toFixed(2)}</TableCell>
+                  <TableCell className="hidden md:table-cell">{requisition.department}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{requisition.items}</TableCell>
+                  <TableCell>{format(requisition.total, baseCurrency)}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(requisition.status)}>
                       {requisition.status}

@@ -52,6 +52,8 @@ import {
 } from 'lucide-react';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { toast } from 'sonner';
+import { useCurrency } from '@/contexts/CurrencyContext'; // Add this import
+import { CurrencyDisplay } from '@/components/ui/currency-display'; // Add this import
 
 interface Expense {
   id: string;
@@ -68,6 +70,7 @@ interface Expense {
 export default function ExpensesPage() {
   const router = useRouter();
   const { user } = useSelector((state: any) => state.auth);
+  const { baseCurrency, format } = useCurrency(); // Add this hook
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -216,10 +219,7 @@ export default function ExpensesPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
+    return format(amount, baseCurrency);
   };
 
   // Calculate totals
@@ -377,26 +377,26 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-2">
           <Receipt className="h-6 w-6" />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Expenses</h1>
             <p className="text-muted-foreground">
               Track and manage your business expenses.
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleExport} className="whitespace-nowrap">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            <span className="hidden sm:inline">Export</span>
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Expense
+                <span className="hidden sm:inline">Add Expense</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -522,7 +522,7 @@ export default function ExpensesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">This Month</CardTitle>
@@ -585,20 +585,20 @@ export default function ExpensesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-7">
             {Object.entries(categoryTotals).map(([category, total]) => (
-              <Card key={category}>
+              <Card key={category} className="min-w-0">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {getCategoryIcon(category)}
-                      <span className="text-sm font-medium">{category}</span>
+                      <span className="text-sm font-medium truncate">{category}</span>
                     </div>
                     <Badge variant={getCategoryBadgeVariant(category)}>
                       {expenses.filter(e => e.category === category).length}
                     </Badge>
                   </div>
-                  <div className="text-lg font-semibold">{formatCurrency(total)}</div>
+                  <div className="text-lg font-semibold truncate">{formatCurrency(total)}</div>
                 </CardContent>
               </Card>
             ))}
@@ -612,7 +612,7 @@ export default function ExpensesPage() {
           <CardTitle>Search & Filter</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -624,9 +624,9 @@ export default function ExpensesPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -641,7 +641,7 @@ export default function ExpensesPage() {
                 </SelectContent>
               </Select>
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Date Range" />
                 </SelectTrigger>
                 <SelectContent>
@@ -669,10 +669,10 @@ export default function ExpensesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Expense</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead className="hidden sm:table-cell">Category</TableHead>
+                <TableHead className="hidden sm:table-cell">Date</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Added By</TableHead>
+                <TableHead className="hidden md:table-cell">Added By</TableHead>
                 <TableHead>Receipt</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -683,12 +683,10 @@ export default function ExpensesPage() {
                   <TableCell>
                     <div>
                       <div className="font-medium">{expense.title}</div>
-                      {expense.description && (
-                        <div className="text-sm text-muted-foreground">{expense.description}</div>
-                      )}
+                      <div className="text-sm text-muted-foreground sm:hidden">{expense.description || 'No description'}</div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <div className="flex items-center gap-2">
                       {getCategoryIcon(expense.category)}
                       <Badge variant={getCategoryBadgeVariant(expense.category)}>
@@ -696,9 +694,9 @@ export default function ExpensesPage() {
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell>{formatDate(expense.date)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{formatDate(expense.date)}</TableCell>
                   <TableCell className="font-semibold">{formatCurrency(expense.amount)}</TableCell>
-                  <TableCell>{expense.userName}</TableCell>
+                  <TableCell className="hidden md:table-cell">{expense.userName}</TableCell>
                   <TableCell>
                     {expense.receiptUrl ? (
                       <Button variant="ghost" size="sm" onClick={() => handleViewReceipt(expense)}>

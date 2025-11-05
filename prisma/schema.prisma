@@ -353,7 +353,6 @@ model BusinessLocation {
   // Relations
   sales         Sale[]
   expenses      Expense[]
-  tables        Table[]
   receiptPrinters ReceiptPrinter[]
   barcodeSettings BarcodeSettings[]
   stockAdjustments StockAdjustment[]

@@ -208,7 +208,6 @@ export async function POST(request: Request) {
         categoryId,
         unitId,
         brandId,
-        warrantyId,
         sellingPriceGroupId,
         imageUrl,
         isActive,

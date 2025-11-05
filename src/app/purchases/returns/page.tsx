@@ -41,8 +41,10 @@ import {
   Filter
 } from 'lucide-react'
 import { MOCK_PURCHASE_RETURNS } from '@/lib/mockData'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 export default function PurchaseReturnsPage() {
+  const { baseCurrency, format } = useCurrency()
   const [returns] = useState(MOCK_PURCHASE_RETURNS)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -99,14 +101,14 @@ export default function PurchaseReturnsPage() {
       
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Purchase Returns</CardTitle>
               <CardDescription>
-                View and manage all purchase returns
+                Manage purchase returns and supplier refunds
               </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -129,9 +131,9 @@ export default function PurchaseReturnsPage() {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleCreateReturn}>
+              <Button onClick={handleCreateReturn} className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
-                New Return
+                <span className="hidden sm:inline">New Return</span>
               </Button>
             </div>
           </div>
@@ -141,10 +143,10 @@ export default function PurchaseReturnsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Return ID</TableHead>
-                <TableHead>Purchase ID</TableHead>
+                <TableHead className="hidden sm:table-cell">Purchase ID</TableHead>
                 <TableHead>Supplier</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Items</TableHead>
+                <TableHead className="hidden md:table-cell">Date</TableHead>
+                <TableHead className="hidden sm:table-cell">Items</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -154,11 +156,11 @@ export default function PurchaseReturnsPage() {
               {filteredReturns.map((returnItem) => (
                 <TableRow key={returnItem.id}>
                   <TableCell className="font-medium">{returnItem.id}</TableCell>
-                  <TableCell>{returnItem.purchaseId}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{returnItem.purchaseId}</TableCell>
                   <TableCell>{returnItem.supplier}</TableCell>
-                  <TableCell>{returnItem.date}</TableCell>
-                  <TableCell>{returnItem.items}</TableCell>
-                  <TableCell>${returnItem.total.toFixed(2)}</TableCell>
+                  <TableCell className="hidden md:table-cell">{returnItem.date}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{returnItem.items}</TableCell>
+                  <TableCell>{format(returnItem.total, baseCurrency)}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(returnItem.status)}>
                       {returnItem.status}

@@ -339,31 +339,31 @@ export default function InventoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inventory Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Inventory Management</h1>
           <p className="text-muted-foreground">
             Manage your products, track stock levels, and receive alerts.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExport}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleExport} className="whitespace-nowrap">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            <span className="hidden sm:inline">Export</span>
           </Button>
-          <Button variant="outline" onClick={() => router.push('/inventory/import')}>
+          <Button variant="outline" onClick={() => router.push('/inventory/import')} className="whitespace-nowrap">
             <Download className="h-4 w-4 mr-2" />
-            Import
+            <span className="hidden sm:inline">Import</span>
           </Button>
-          <Button variant="outline" onClick={() => router.push('/inventory/adjust')}>
+          <Button variant="outline" onClick={() => router.push('/inventory/adjust')} className="whitespace-nowrap">
             <Package className="h-4 w-4 mr-2" />
-            Adjust Stock
+            <span className="hidden sm:inline">Adjust Stock</span>
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Product
+                <span className="hidden sm:inline">Add Product</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
@@ -623,12 +623,12 @@ export default function InventoryPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Barcode</TableHead>
+                <TableHead className="hidden sm:table-cell">SKU</TableHead>
+                <TableHead className="hidden md:table-cell">Barcode</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead className="hidden sm:table-cell">Category</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -644,14 +644,14 @@ export default function InventoryPage() {
                         </div>
                         <div>
                           <div className="font-medium">{product.name}</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-sm text-muted-foreground hidden sm:table-cell">
                             Cost: <CurrencyDisplay amount={product.cost} />
                           </div>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{product.sku}</TableCell>
-                    <TableCell className="font-mono">{product.barcode}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{product.sku}</TableCell>
+                    <TableCell className="hidden md:table-cell font-mono">{product.barcode}</TableCell>
                     <TableCell>
                       <CurrencyDisplay amount={product.price} />
                     </TableCell>
@@ -666,7 +666,7 @@ export default function InventoryPage() {
                     <TableCell>
                       <Badge variant={stockStatus.variant}>{stockStatus.status}</Badge>
                     </TableCell>
-                    <TableCell>{product.category?.name}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{product.category?.name}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

@@ -351,41 +351,47 @@ export default function POSPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Point of Sale</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Point of Sale</h1>
           <p className="text-muted-foreground">
             Process sales and manage transactions.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsCalculatorOpen(true)}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setIsCalculatorOpen(true)} className="whitespace-nowrap">
             <Calculator className="h-4 w-4 mr-2" />
-            Calculator
+            <span className="hidden sm:inline">Calculator</span>
           </Button>
-          <Button variant="outline" onClick={() => dispatch(setScanning(!isScanning))}>
+          <Button variant="outline" onClick={() => dispatch(setScanning(!isScanning))} className="whitespace-nowrap">
             <Camera className="h-4 w-4 mr-2" />
-            {isScanning ? 'Stop Scanning' : 'Start Scanning'}
+            <span className="hidden sm:inline">{isScanning ? 'Stop Scanning' : 'Start Scanning'}</span>
           </Button>
           <Button 
             variant="outline" 
             disabled={items.length === 0}
             onClick={() => dispatch(clearCart())}
+            className="whitespace-nowrap"
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            Clear Cart
+            <span className="hidden sm:inline">Clear Cart</span>
           </Button>
           {items.length > 0 && (
-            <Button variant="outline" onClick={handleGenerateReceipt}>
+            <Button variant="outline" onClick={handleGenerateReceipt} className="whitespace-nowrap">
               <Download className="h-4 w-4 mr-2" />
-              Generate Receipt
+              <span className="hidden sm:inline">Generate Receipt</span>
             </Button>
           )}
           <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
             <DialogTrigger asChild>
-              <Button disabled={items.length === 0}>
+              <Button disabled={items.length === 0} className="whitespace-nowrap">
                 <Receipt className="h-4 w-4 mr-2" />
-                Checkout (<CurrencyDisplay amount={total} fromCurrency={currency} />)
+                <span className="hidden sm:inline">Checkout</span>
+                {items.length > 0 && (
+                  <span className="ml-1">
+                    (<CurrencyDisplay amount={total} fromCurrency={currency} />)
+                  </span>
+                )}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -596,7 +602,7 @@ export default function POSPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
         {/* Products Section */}
         <div className="lg:col-span-2 space-y-4">
           {/* Barcode Scanner */}
@@ -640,7 +646,7 @@ export default function POSPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                 {filteredProducts.map((product) => (
                   <Card 
                     key={product.id} 
@@ -655,7 +661,7 @@ export default function POSPage() {
                         </Badge>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground font-mono">
+                        <p className="text-sm text-muted-foreground font-mono hidden sm:block">
                           {product.barcode}
                         </p>
                         <p className="font-semibold text-lg">

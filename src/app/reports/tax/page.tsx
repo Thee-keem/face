@@ -36,6 +36,7 @@ import {
   Calculator,
   AlertTriangle
 } from 'lucide-react'
+import { useCurrency } from '@/contexts/CurrencyContext' // Add this import
 
 // Mock data for tax report
 const taxData = [
@@ -63,6 +64,7 @@ const taxFilings = [
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658']
 
 export default function TaxReportPage() {
+  const { baseCurrency, format } = useCurrency() // Add this hook
   const [dateRange, setDateRange] = useState({ start: '2024-01-01', end: '2024-06-30' })
   const [exportFormat, setExportFormat] = useState('csv')
 
@@ -114,7 +116,7 @@ export default function TaxReportPage() {
               />
             </div>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <Select value={exportFormat} onValueChange={setExportFormat}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue />
@@ -125,23 +127,23 @@ export default function TaxReportPage() {
                 <SelectItem value="xlsx">Excel</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleExport}>
+            <Button onClick={handleExport} className="whitespace-nowrap">
               <Download className="h-4 w-4 mr-2" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
           </div>
         </CardContent>
       </Card>
       
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Taxable Sales</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalTaxableSales.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalTaxableSales, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+12% from last period</p>
           </CardContent>
         </Card>
@@ -151,7 +153,7 @@ export default function TaxReportPage() {
             <Calculator className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalTaxCollected.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalTaxCollected, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">+8% from last period</p>
           </CardContent>
         </Card>
@@ -161,7 +163,7 @@ export default function TaxReportPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalTaxPaid.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(totalTaxPaid, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">All filings up to date</p>
           </CardContent>
         </Card>
@@ -171,7 +173,7 @@ export default function TaxReportPage() {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${outstandingLiability.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{format(outstandingLiability, baseCurrency)}</div>
             <p className="text-xs text-muted-foreground">No outstanding payments</p>
           </CardContent>
         </Card>
@@ -192,7 +194,7 @@ export default function TaxReportPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']} />
+                <Tooltip formatter={(value) => [format(Number(value), baseCurrency), 'Amount']} />
                 <Legend />
                 <Bar dataKey="taxCollected" fill="#8884d8" name="Tax Collected" />
                 <Bar dataKey="taxPaid" fill="#82ca9d" name="Tax Paid" />
@@ -258,22 +260,21 @@ export default function TaxReportPage() {
             <TableBody>
               {taxFilings.map((filing) => (
                 <TableRow key={filing.id}>
-                  <TableCell className="font-medium">{filing.period}</TableCell>
-                  <TableCell>{filing.dueDate}</TableCell>
                   <TableCell>
-                    <Badge 
-                      variant={
-                        filing.status === 'Filed' ? 'default' : 
-                        filing.status === 'Pending' ? 'secondary' : 
-                        'outline'
-                      }
-                    >
+                    <div>
+                      <div className="font-medium">{filing.period}</div>
+                      <div className="text-sm text-muted-foreground">Due: {filing.dueDate}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      filing.status === 'Filed' ? 'default' : 
+                      filing.status === 'Pending' ? 'secondary' : 'outline'
+                    }>
                       {filing.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    {filing.amount > 0 ? `$${filing.amount.toLocaleString()}` : '-'}
-                  </TableCell>
+                  <TableCell>{format(filing.amount, baseCurrency)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

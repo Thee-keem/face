@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { BoltAuth } from '@/lib/boltAuth'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { getIO } from '@/lib/socket'
 
 // Extend the default session types
 declare module "next-auth" {
@@ -62,6 +63,17 @@ export async function PUT(request: Request) {
         stock: body.quantity
       }
     })
+    
+    // Emit real-time inventory update via WebSocket
+    const io = getIO();
+    if (io) {
+      io.emit('inventoryUpdate', {
+        productId: updatedProduct.id,
+        stock: updatedProduct.stock,
+        productName: updatedProduct.name,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     // Check if we need to generate alerts
     let alert: any = null
@@ -145,6 +157,17 @@ export async function POST(request: Request) {
         stock: newStock
       }
     })
+    
+    // Emit real-time inventory update via WebSocket
+    const io = getIO();
+    if (io) {
+      io.emit('inventoryUpdate', {
+        productId: updatedProduct.id,
+        stock: updatedProduct.stock,
+        productName: updatedProduct.name,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     // Create adjustment record (you might want to create a separate table for this)
     // For now, we'll just log it
